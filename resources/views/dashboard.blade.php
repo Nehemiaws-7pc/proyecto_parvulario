@@ -20,6 +20,10 @@
             <x-panel-card icon="E" title="Estudiantes" description="Expedientes y consulta según los permisos de tu rol." route="estudiantes.index" />
         </div>
 
+        <div class="col-md-6 col-xl-4">
+            <x-panel-card icon="A" title="Asistencia" description="Registro diario, consulta y resumen mensual autorizado." route="asistencia.index" />
+        </div>
+
         @if (auth()->user()->hasRole([\App\Models\Role::DIRECCION, \App\Models\Role::ADMINISTRATIVO]))
             <div class="col-md-6 col-xl-4">
                 <x-panel-card icon="G" title="Estructura escolar" description="Ciclos, grados, secciones y grupos docentes." route="estructura.index" />

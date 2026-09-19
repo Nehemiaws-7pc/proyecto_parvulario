@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Asistencia;
 use App\Models\CicloEscolar;
 use App\Models\Encargado;
 use App\Models\Estudiante;
@@ -44,9 +45,13 @@ class SchoolDataSeeder extends Seeder
                 'estado' => 'activo',
             ],
         );
-        $student->asignaciones()->firstOrCreate(
+        $assignment = $student->asignaciones()->firstOrCreate(
             ['grupo_id' => $group->id],
             ['fecha_asignacion' => '2026-01-15', 'estado' => 'activa'],
+        );
+        Asistencia::updateOrCreate(
+            ['asignacion_id' => $assignment->id, 'fecha' => '2026-09-18'],
+            ['registrado_por' => $teacher->id, 'estado' => Asistencia::PRESENTE, 'observacion' => null],
         );
 
         $parentUser = User::whereHas('role', fn ($query) => $query->where('nombre', Role::ENCARGADO))

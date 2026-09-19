@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Asistencia;
 use App\Models\Estudiante;
+use App\Policies\AsistenciaPolicy;
 use App\Policies\EstudiantePolicy;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Estudiante::class, EstudiantePolicy::class);
+        Gate::policy(Asistencia::class, AsistenciaPolicy::class);
         Paginator::useBootstrapFive();
     }
 }

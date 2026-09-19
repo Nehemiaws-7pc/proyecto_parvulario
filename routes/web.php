@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EncargadoController;
 use App\Http\Controllers\EstructuraEscolarController;
@@ -24,6 +25,12 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('/cerrar-sesion', [AuthController::class, 'destroy'])->name('logout');
 
     Route::resource('estudiantes', EstudianteController::class)->except('destroy');
+
+    Route::get('asistencia', [AsistenciaController::class, 'index'])->name('asistencia.index');
+    Route::post('asistencia', [AsistenciaController::class, 'store'])->name('asistencia.store');
+    Route::get('asistencia/resumen-mensual', [AsistenciaController::class, 'monthly'])->name('asistencia.monthly');
+    Route::get('asistencia/{asistencia}/editar', [AsistenciaController::class, 'edit'])->name('asistencia.edit');
+    Route::put('asistencia/{asistencia}', [AsistenciaController::class, 'update'])->name('asistencia.update');
     Route::post('estudiantes/{estudiante}/encargados', [EncargadoController::class, 'store'])
         ->name('estudiantes.encargados.store');
     Route::put('estudiantes/{estudiante}/encargados/{encargado}', [EncargadoController::class, 'update'])

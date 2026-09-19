@@ -16,6 +16,7 @@
                     <span>Escuelita Parvularia Arévalo Barrios</span>
                 </a>
                 <a class="nav-link text-white ms-auto me-3" href="{{ route('estudiantes.index') }}">Estudiantes</a>
+                <a class="nav-link text-white me-3" href="{{ route('asistencia.index') }}">Asistencia</a>
                 <div class="d-flex align-items-center gap-3 text-white">
                     <div class="d-none d-md-block text-end small">
                         <div class="fw-semibold">{{ auth()->user()->nombre }}</div>

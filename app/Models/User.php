@@ -78,6 +78,11 @@ class User extends Authenticatable
         return $this->hasOne(Encargado::class, 'usuario_id');
     }
 
+    public function asistenciasRegistradas(): HasMany
+    {
+        return $this->hasMany(Asistencia::class, 'registrado_por');
+    }
+
     /**
      * @param  string|array<int, string>  $roles
      */

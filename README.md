@@ -6,6 +6,8 @@ No incluye módulos de inscripciones ni pagos.
 
 El módulo de expedientes estudiantiles incluye ciclos, grados, secciones, grupos docentes, historial escolar por ciclo, encargados, contactos de emergencia y personas autorizadas para recoger. La ubicación en un grupo actualiza el historial académico y no representa una inscripción.
 
+El módulo de asistencia permite el registro diario completo por grupo, consulta por fecha, correcciones autorizadas con bitácora y resumen mensual. La restricción única por ubicación escolar y fecha evita duplicados.
+
 Los permisos aplicados son:
 
 - Dirección y personal administrativo pueden crear y actualizar expedientes y estructura escolar.
