@@ -8,11 +8,18 @@ El módulo de expedientes estudiantiles incluye ciclos, grados, secciones, grupo
 
 El módulo de asistencia permite el registro diario completo por grupo, consulta por fecha, correcciones autorizadas con bitácora y resumen mensual. La restricción única por ubicación escolar y fecha evita duplicados.
 
+El módulo de evaluaciones organiza períodos, áreas e indicadores por la estructura escolar existente. Permite registrar resultados descriptivos configurables, observaciones docentes, correcciones auditadas y publicar resultados para los encargados autorizados.
+
+El módulo de actividades permite a cada docente crear actividades descriptivas o numéricas para su grupo, registrar una observación individual y publicar los resultados. Dirección consulta todos los grupos y cada familia ve únicamente resultados publicados de estudiantes vinculados.
+
+Las justificaciones de inasistencia permiten que una familia solicite la revisión de una falta o llegada tarde vinculada, que Dirección la acepte o rechace con registro en bitácora y que el docente consulte las solicitudes de su grupo.
+
 Los permisos aplicados son:
 
 - Dirección y personal administrativo pueden crear y actualizar expedientes y estructura escolar.
 - Cada docente consulta únicamente estudiantes con una ubicación activa en sus grupos.
 - Cada padre o encargado consulta únicamente estudiantes vinculados con su cuenta.
+- En evaluaciones, los docentes trabajan únicamente con sus grupos activos y las familias solo ven resultados publicados de estudiantes vinculados.
 
 ## Requisitos
 

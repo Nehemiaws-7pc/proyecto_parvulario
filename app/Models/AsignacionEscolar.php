@@ -34,4 +34,14 @@ class AsignacionEscolar extends Model
     {
         return $this->hasMany(Asistencia::class, 'asignacion_id');
     }
+
+    public function evaluaciones(): HasMany
+    {
+        return $this->hasMany(Evaluacion::class, 'asignacion_id');
+    }
+
+    public function calificaciones(): HasMany
+    {
+        return $this->hasMany(Calificacion::class, 'asignacion_id');
+    }
 }

@@ -24,6 +24,10 @@
             <x-panel-card icon="A" title="Asistencia" description="Registro diario, consulta y resumen mensual autorizado." route="asistencia.index" />
         </div>
 
+        <div class="col-md-6 col-xl-4">
+            <x-panel-card icon="V" title="Evaluaciones" description="Resultados descriptivos, observaciones y publicación autorizada." route="evaluaciones.index" />
+        </div>
+
         @if (auth()->user()->hasRole([\App\Models\Role::DIRECCION, \App\Models\Role::ADMINISTRATIVO]))
             <div class="col-md-6 col-xl-4">
                 <x-panel-card icon="G" title="Estructura escolar" description="Ciclos, grados, secciones y grupos docentes." route="estructura.index" />

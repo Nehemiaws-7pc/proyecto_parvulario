@@ -43,6 +43,11 @@ class Grupo extends Model
         return $this->hasMany(AsignacionEscolar::class, 'grupo_id');
     }
 
+    public function actividades(): HasMany
+    {
+        return $this->hasMany(Actividad::class, 'grupo_id');
+    }
+
     public function getNombreCompletoAttribute(): string
     {
         return "{$this->ciclo->anio} · {$this->grado->nombre} · Sección {$this->seccion->nombre}";

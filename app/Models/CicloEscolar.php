@@ -23,4 +23,9 @@ class CicloEscolar extends Model
     {
         return $this->hasMany(Grupo::class, 'ciclo_id');
     }
+
+    public function periodos(): HasMany
+    {
+        return $this->hasMany(Periodo::class, 'ciclo_id');
+    }
 }

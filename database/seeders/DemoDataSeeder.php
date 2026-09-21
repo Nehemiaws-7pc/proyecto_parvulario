@@ -17,15 +17,19 @@ class DemoDataSeeder extends Seeder
 
         $password = config('app.demo_user_password');
 
-        if (! is_string($password) || strlen($password) < 12) {
-            throw new RuntimeException('DEMO_USER_PASSWORD must contain at least 12 characters.');
+        if (! is_string($password) || strlen($password) < 8) {
+            throw new RuntimeException('DEMO_USER_PASSWORD must contain at least 8 characters.');
         }
 
         $users = [
-            [Role::DIRECCION, 'DIR-001', 'Ana López', '5550-0101'],
-            [Role::ADMINISTRATIVO, 'ADM-001', 'Carlos Méndez', '5550-0102'],
-            [Role::DOCENTE, 'DOC-001', 'María García', '5550-0103'],
-            [Role::ENCARGADO, 'ENC-0001', 'José Ramírez', '5550-0104'],
+            [Role::DIRECCION, 'DIR-001', 'Dirección Demo Arcoíris', '5550-0101'],
+            [Role::DOCENTE, 'DOC-001', 'Docente Demo Aurora', '5550-0201'],
+            [Role::DOCENTE, 'DOC-002', 'Docente Demo Brisa', '5550-0202'],
+            [Role::DOCENTE, 'DOC-003', 'Docente Demo Cielo', '5550-0203'],
+            [Role::DOCENTE, 'DOC-004', 'Docente Demo Dalia', '5550-0204'],
+            [Role::DOCENTE, 'DOC-005', 'Docente Demo Estrella', '5550-0205'],
+            [Role::DOCENTE, 'DOC-006', 'Docente Demo Fantasía', '5550-0206'],
+            [Role::ENCARGADO, 'ENC-0001', 'Familia Demo Lucero', '5550-0301'],
         ];
 
         foreach ($users as [$role, $code, $name, $phone]) {
@@ -38,7 +42,7 @@ class DemoDataSeeder extends Seeder
                     'telefono' => $phone,
                     'correo' => null,
                     'activo' => true,
-                    'cambiar_password' => false,
+                    'cambiar_password' => true,
                 ],
             );
         }

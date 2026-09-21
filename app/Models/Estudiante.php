@@ -41,6 +41,16 @@ class Estudiante extends Model
         return $this->hasMany(AsignacionEscolar::class, 'estudiante_id');
     }
 
+    public function evaluaciones(): HasMany
+    {
+        return $this->hasMany(Evaluacion::class, 'estudiante_id');
+    }
+
+    public function calificaciones(): HasMany
+    {
+        return $this->hasMany(Calificacion::class, 'estudiante_id');
+    }
+
     public function asignacionActual(): HasOne
     {
         return $this->hasOne(AsignacionEscolar::class, 'estudiante_id')

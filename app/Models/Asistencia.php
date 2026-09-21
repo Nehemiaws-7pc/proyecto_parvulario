@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Asistencia extends Model
 {
@@ -43,5 +44,10 @@ class Asistencia extends Model
     public function registradoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'registrado_por');
+    }
+
+    public function justificacion(): HasOne
+    {
+        return $this->hasOne(JustificacionInasistencia::class, 'asistencia_id');
     }
 }

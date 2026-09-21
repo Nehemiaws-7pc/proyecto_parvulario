@@ -13,19 +13,29 @@
             <div class="container py-1">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('dashboard') }}">
                     <span class="brand-mark" aria-hidden="true">AB</span>
-                    <span>Escuelita Parvularia Arévalo Barrios</span>
+                    <span class="d-none d-sm-inline">Escuelita Parvularia Arévalo Barrios</span>
                 </a>
-                <a class="nav-link text-white ms-auto me-3" href="{{ route('estudiantes.index') }}">Estudiantes</a>
-                <a class="nav-link text-white me-3" href="{{ route('asistencia.index') }}">Asistencia</a>
-                <div class="d-flex align-items-center gap-3 text-white">
-                    <div class="d-none d-md-block text-end small">
-                        <div class="fw-semibold">{{ auth()->user()->nombre }}</div>
-                        <div class="opacity-75">{{ auth()->user()->role->etiqueta }}</div>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation" aria-controls="mainNavigation" aria-expanded="false" aria-label="Mostrar navegación">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNavigation">
+                    <div class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+                        <a class="nav-link text-white" href="{{ route('estudiantes.index') }}">Estudiantes</a>
+                        <a class="nav-link text-white" href="{{ route('asistencia.index') }}">Asistencia</a>
+                        <a class="nav-link text-white" href="{{ route('justificaciones.index') }}">Justificaciones</a>
+                        <a class="nav-link text-white" href="{{ route('actividades.index') }}">Actividades</a>
+                        <a class="nav-link text-white" href="{{ route('evaluaciones.index') }}">Evaluaciones</a>
                     </div>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
-                    </form>
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 text-white ms-lg-4 py-3 py-lg-0">
+                        <div class="text-lg-end small">
+                            <div class="fw-semibold">{{ auth()->user()->nombre }}</div>
+                            <div class="opacity-75">{{ auth()->user()->role->etiqueta }}</div>
+                        </div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </nav>

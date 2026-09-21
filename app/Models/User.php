@@ -83,6 +83,26 @@ class User extends Authenticatable
         return $this->hasMany(Asistencia::class, 'registrado_por');
     }
 
+    public function evaluacionesRegistradas(): HasMany
+    {
+        return $this->hasMany(Evaluacion::class, 'evaluado_por');
+    }
+
+    public function evaluacionesPublicadas(): HasMany
+    {
+        return $this->hasMany(Evaluacion::class, 'publicado_por');
+    }
+
+    public function actividadesCreadas(): HasMany
+    {
+        return $this->hasMany(Actividad::class, 'creado_por');
+    }
+
+    public function justificacionesSolicitadas(): HasMany
+    {
+        return $this->hasMany(JustificacionInasistencia::class, 'solicitado_por');
+    }
+
     /**
      * @param  string|array<int, string>  $roles
      */

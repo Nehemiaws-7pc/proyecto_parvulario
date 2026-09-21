@@ -39,6 +39,7 @@ export default defineRailway(() => {
             DEMO_USER_PASSWORD: preserve(),
             RAILPACK_NODE_NPM_INSTALL: "npm ci",
             RAILPACK_PHP_EXTENSIONS: "pdo_mysql",
+            RAILPACK_SKIP_MIGRATIONS: "true",
         },
     });
 

@@ -1,10 +1,14 @@
 <?php
 
+use App\Http\Controllers\ActividadController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ConfiguracionEvaluacionController;
 use App\Http\Controllers\EncargadoController;
 use App\Http\Controllers\EstructuraEscolarController;
 use App\Http\Controllers\EstudianteController;
+use App\Http\Controllers\EvaluacionController;
+use App\Http\Controllers\JustificacionInasistenciaController;
 use App\Http\Controllers\PersonaAutorizadaController;
 use App\Models\Role;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +35,43 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('asistencia/resumen-mensual', [AsistenciaController::class, 'monthly'])->name('asistencia.monthly');
     Route::get('asistencia/{asistencia}/editar', [AsistenciaController::class, 'edit'])->name('asistencia.edit');
     Route::put('asistencia/{asistencia}', [AsistenciaController::class, 'update'])->name('asistencia.update');
+
+    Route::get('justificaciones', [JustificacionInasistenciaController::class, 'index'])->name('justificaciones.index');
+    Route::post('justificaciones', [JustificacionInasistenciaController::class, 'store'])->name('justificaciones.store');
+    Route::put('justificaciones/{justificacion}/resolver', [JustificacionInasistenciaController::class, 'resolve'])
+        ->name('justificaciones.resolve');
+
+    Route::get('actividades', [ActividadController::class, 'index'])->name('actividades.index');
+    Route::post('actividades', [ActividadController::class, 'store'])->name('actividades.store');
+    Route::get('actividades/{actividad}', [ActividadController::class, 'show'])->name('actividades.show');
+    Route::post('actividades/{actividad}/calificaciones', [ActividadController::class, 'storeGrades'])
+        ->name('actividades.calificaciones.store');
+    Route::post('actividades/{actividad}/publicar', [ActividadController::class, 'publish'])->name('actividades.publish');
+
+    Route::get('evaluaciones', [EvaluacionController::class, 'index'])->name('evaluaciones.index');
+    Route::post('evaluaciones', [EvaluacionController::class, 'store'])->name('evaluaciones.store');
+    Route::post('evaluaciones/publicar', [EvaluacionController::class, 'publish'])->name('evaluaciones.publish');
+    Route::get('evaluaciones/configuracion', [ConfiguracionEvaluacionController::class, 'index'])
+        ->name('evaluaciones.configuracion');
+    Route::post('evaluaciones/configuracion/periodos', [ConfiguracionEvaluacionController::class, 'storePeriod'])
+        ->name('evaluaciones.periodos.store');
+    Route::put('evaluaciones/configuracion/periodos/{periodo}', [ConfiguracionEvaluacionController::class, 'updatePeriod'])
+        ->name('evaluaciones.periodos.update');
+    Route::post('evaluaciones/configuracion/areas', [ConfiguracionEvaluacionController::class, 'storeArea'])
+        ->name('evaluaciones.areas.store');
+    Route::put('evaluaciones/configuracion/areas/{area}', [ConfiguracionEvaluacionController::class, 'updateArea'])
+        ->name('evaluaciones.areas.update');
+    Route::post('evaluaciones/configuracion/indicadores', [ConfiguracionEvaluacionController::class, 'storeIndicator'])
+        ->name('evaluaciones.indicadores.store');
+    Route::put('evaluaciones/configuracion/indicadores/{indicador}', [ConfiguracionEvaluacionController::class, 'updateIndicator'])
+        ->name('evaluaciones.indicadores.update');
+    Route::post('evaluaciones/configuracion/escalas', [ConfiguracionEvaluacionController::class, 'storeScale'])
+        ->name('evaluaciones.escalas.store');
+    Route::put('evaluaciones/configuracion/escalas/{escala}', [ConfiguracionEvaluacionController::class, 'updateScale'])
+        ->name('evaluaciones.escalas.update');
+    Route::get('evaluaciones/{evaluacion}/editar', [EvaluacionController::class, 'edit'])->name('evaluaciones.edit');
+    Route::put('evaluaciones/{evaluacion}', [EvaluacionController::class, 'update'])->name('evaluaciones.update');
+
     Route::post('estudiantes/{estudiante}/encargados', [EncargadoController::class, 'store'])
         ->name('estudiantes.encargados.store');
     Route::put('estudiantes/{estudiante}/encargados/{encargado}', [EncargadoController::class, 'update'])

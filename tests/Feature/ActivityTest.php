@@ -1,0 +1,108 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Actividad;
+use App\Models\Calificacion;
+use App\Models\Grupo;
+use App\Models\Periodo;
+use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+class ActivityTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_teacher_can_manage_results_only_for_the_assigned_group_without_duplicates(): void
+    {
+        $this->seedDemoData();
+        $teacher = User::where('codigo_usuario', 'DOC-001')->firstOrFail();
+        $ownGroup = Grupo::where('docente_id', $teacher->id)->firstOrFail();
+        $otherGroup = Grupo::where('docente_id', '!=', $teacher->id)->firstOrFail();
+        $period = Periodo::where('ciclo_id', $ownGroup->ciclo_id)->orderByDesc('fecha_inicio')->firstOrFail();
+        $duplicate = Actividad::where('grupo_id', $ownGroup->id)->firstOrFail();
+        $activityCount = Actividad::count();
+
+        $this->actingAs($teacher)->get(route('actividades.index', ['grupo_id' => $otherGroup->id]))
+            ->assertForbidden();
+        $this->actingAs($teacher)->get(route('actividades.show', Actividad::where('grupo_id', $otherGroup->id)->firstOrFail()))
+            ->assertForbidden();
+
+        $this->actingAs($teacher)->post(route('actividades.store'), [
+            'grupo_id' => $ownGroup->id,
+            'periodo_id' => $duplicate->periodo_id,
+            'titulo' => $duplicate->titulo,
+            'descripcion' => 'Intento duplicado ficticio.',
+            'fecha' => $duplicate->fecha->toDateString(),
+            'tipo' => Actividad::NUMERICA,
+        ])->assertSessionHasErrors('titulo');
+        $this->assertSame($activityCount, Actividad::count());
+
+        $this->actingAs($teacher)->post(route('actividades.store'), [
+            'grupo_id' => $ownGroup->id,
+            'periodo_id' => $period->id,
+            'titulo' => 'Actividad numérica adicional ficticia',
+            'descripcion' => 'Actividad creada por la prueba automatizada.',
+            'fecha' => '2026-09-20',
+            'tipo' => Actividad::NUMERICA,
+        ])->assertRedirect();
+
+        $activity = Actividad::where('titulo', 'Actividad numérica adicional ficticia')->firstOrFail();
+        $assignments = $ownGroup->asignaciones()->where('estado', 'activa')->get();
+        $results = $assignments->mapWithKeys(fn ($assignment, $index) => [$assignment->id => 80 + $index])->all();
+        $observations = $assignments->mapWithKeys(fn ($assignment) => [$assignment->id => 'Observación individual ficticia.'])->all();
+
+        $this->actingAs($teacher)->post(route('actividades.calificaciones.store', $activity), [
+            'resultados' => $results,
+            'observaciones' => $observations,
+        ])->assertRedirect(route('actividades.show', $activity));
+        $this->assertSame(4, $activity->calificaciones()->count());
+
+        $results[$assignments->first()->id] = 95;
+        $this->actingAs($teacher)->post(route('actividades.calificaciones.store', $activity), [
+            'resultados' => $results,
+            'observaciones' => $observations,
+        ])->assertRedirect(route('actividades.show', $activity));
+
+        $this->assertSame(4, $activity->calificaciones()->count());
+        $this->assertSame('95.00', Calificacion::where('actividad_id', $activity->id)
+            ->where('asignacion_id', $assignments->first()->id)->value('nota'));
+    }
+
+    public function test_direction_sees_every_group_and_guardian_only_sees_published_linked_results(): void
+    {
+        $this->seedDemoData();
+        $direction = User::where('codigo_usuario', 'DIR-001')->firstOrFail();
+        $guardian = User::where('codigo_usuario', 'ENC-0001')->firstOrFail();
+        $published = Actividad::where('publicada', true)->firstOrFail();
+        $draft = Actividad::where('publicada', false)->firstOrFail();
+
+        foreach (Grupo::all() as $group) {
+            $this->actingAs($direction)->get(route('actividades.index', ['grupo_id' => $group->id]))->assertOk();
+        }
+        $this->actingAs($direction)->get(route('actividades.show', $draft))->assertOk();
+
+        $this->actingAs($guardian)->get(route('actividades.show', $published))
+            ->assertOk()
+            ->assertSee($published->titulo)
+            ->assertSee('Observación descriptiva ficticia.');
+        $this->actingAs($guardian)->get(route('actividades.show', $draft))->assertForbidden();
+        $this->actingAs($guardian)->post(route('actividades.calificaciones.store', $published), [
+            'resultados' => [],
+        ])->assertForbidden();
+
+        $groupResponse = $this->actingAs($guardian)->get(route('actividades.index', ['grupo_id' => $draft->grupo_id]));
+        $groupResponse->assertOk()->assertDontSee($draft->titulo);
+    }
+
+    private function seedDemoData(): void
+    {
+        Config::set('app.demo_data_enabled', true);
+        Config::set('app.demo_user_password', Str::password(16));
+        $this->seed(DatabaseSeeder::class);
+    }
+}
