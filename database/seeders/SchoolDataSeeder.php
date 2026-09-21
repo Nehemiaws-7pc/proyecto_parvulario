@@ -11,6 +11,7 @@ use App\Models\Grupo;
 use App\Models\Role;
 use App\Models\Seccion;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 
 class SchoolDataSeeder extends Seeder
@@ -50,7 +51,7 @@ class SchoolDataSeeder extends Seeder
             ['fecha_asignacion' => '2026-01-15', 'estado' => 'activa'],
         );
         Asistencia::updateOrCreate(
-            ['asignacion_id' => $assignment->id, 'fecha' => '2026-09-18'],
+            ['asignacion_id' => $assignment->id, 'fecha' => CarbonImmutable::parse('2026-09-18')],
             ['registrado_por' => $teacher->id, 'estado' => Asistencia::PRESENTE, 'observacion' => null],
         );
 
