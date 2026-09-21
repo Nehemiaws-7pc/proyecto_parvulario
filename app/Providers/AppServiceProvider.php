@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Models\Actividad;
 use App\Models\Asistencia;
+use App\Models\AvisoAvance;
 use App\Models\Estudiante;
 use App\Models\Evaluacion;
 use App\Models\JustificacionInasistencia;
 use App\Policies\ActividadPolicy;
 use App\Policies\AsistenciaPolicy;
+use App\Policies\AvisoAvancePolicy;
 use App\Policies\EstudiantePolicy;
 use App\Policies\EvaluacionPolicy;
 use App\Policies\JustificacionInasistenciaPolicy;
@@ -35,6 +37,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Asistencia::class, AsistenciaPolicy::class);
         Gate::policy(Evaluacion::class, EvaluacionPolicy::class);
         Gate::policy(Actividad::class, ActividadPolicy::class);
+        Gate::policy(AvisoAvance::class, AvisoAvancePolicy::class);
         Gate::policy(JustificacionInasistencia::class, JustificacionInasistenciaPolicy::class);
         Paginator::useBootstrapFive();
     }

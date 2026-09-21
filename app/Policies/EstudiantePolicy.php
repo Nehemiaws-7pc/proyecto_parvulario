@@ -28,8 +28,13 @@ class EstudiantePolicy
             return $estudiante->asignaciones()
                 ->where('estado', 'activa')
                 ->whereHas('grupo', fn ($query) => $query
-                    ->where('docente_id', $user->id)
-                    ->where('activo', true))
+                    ->where('activo', true)
+                    ->where(function ($groupQuery) use ($user) {
+                        $groupQuery->where('docente_id', $user->id)
+                            ->orWhereHas('docentes', fn ($teacher) => $teacher
+                                ->whereKey($user->id)
+                                ->where('grupo_docente.activo', true));
+                    }))
                 ->exists();
         }
 

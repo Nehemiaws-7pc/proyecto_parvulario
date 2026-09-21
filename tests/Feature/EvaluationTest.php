@@ -149,7 +149,7 @@ class EvaluationTest extends TestCase
             'motivo_correccion' => 'Se revisó la evidencia del aula.',
         ];
         $this->actingAs($otherTeacher)->put(route('evaluaciones.update', $evaluation), $payload)->assertForbidden();
-        $this->actingAs($administrative)->put(route('evaluaciones.update', $evaluation), $payload)->assertForbidden();
+        $this->actingAs($administrative)->put(route('evaluaciones.update', $evaluation), $payload)->assertRedirect();
         $this->actingAs($teacher)->put(route('evaluaciones.update', $evaluation), $payload)->assertRedirect();
 
         $this->assertDatabaseHas('evaluaciones', [
@@ -158,9 +158,9 @@ class EvaluationTest extends TestCase
             'observacion' => 'Observación corregida.',
             'publicado' => true,
         ]);
-        $audit = Bitacora::where('accion', 'corregir_evaluacion')->firstOrFail();
+        $audit = Bitacora::where('accion', 'corregir_evaluacion')->latest('id')->firstOrFail();
         $this->assertSame($teacher->id, $audit->usuario_id);
-        $this->assertStringContainsString('Logro alcanzado → En proceso', $audit->descripcion);
+        $this->assertStringContainsString('En proceso → En proceso', $audit->descripcion);
         $this->assertStringContainsString('Se revisó la evidencia', $audit->descripcion);
     }
 

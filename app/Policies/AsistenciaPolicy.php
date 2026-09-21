@@ -25,7 +25,7 @@ class AsistenciaPolicy
         }
 
         if ($user->hasRole(Role::DOCENTE)) {
-            return $attendance->asignacion->grupo->docente_id === $user->id;
+            return $attendance->asignacion->grupo->tieneDocente($user);
         }
 
         if ($user->hasRole(Role::ENCARGADO)) {

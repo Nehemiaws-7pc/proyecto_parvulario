@@ -10,17 +10,17 @@ class JustificacionInasistenciaPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole([Role::DIRECCION, Role::DOCENTE, Role::ENCARGADO]);
+        return $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE, Role::ENCARGADO]);
     }
 
     public function view(User $user, JustificacionInasistencia $justificacion): bool
     {
-        if ($user->hasRole(Role::DIRECCION)) {
+        if ($user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO])) {
             return true;
         }
 
         if ($user->hasRole(Role::DOCENTE)) {
-            return $justificacion->asistencia->asignacion->grupo->docente_id === $user->id;
+            return $justificacion->asistencia->asignacion->grupo->tieneDocente($user);
         }
 
         return $user->hasRole(Role::ENCARGADO)
@@ -37,6 +37,6 @@ class JustificacionInasistenciaPolicy
 
     public function resolve(User $user): bool
     {
-        return $user->hasRole(Role::DIRECCION);
+        return $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO]);
     }
 }

@@ -58,7 +58,7 @@ class AsistenciaController extends Controller
         $canRegister = $group
             && $request->user()->hasRole(Role::DOCENTE)
             && $group->activo
-            && $group->docente_id === $request->user()->id
+            && $group->tieneDocente($request->user())
             && CarbonImmutable::parse($date)->lte(today())
             && $attendances->isEmpty();
 
@@ -89,7 +89,13 @@ class AsistenciaController extends Controller
         $group = Grupo::query()
             ->whereKey($validated['grupo_id'])
             ->where('activo', true)
-            ->where('docente_id', $request->user()->id)
+            ->where(function (Builder $group) use ($request) {
+                $group->where('docente_id', $request->user()->id)
+                    ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
+                        ->where('users.id', $request->user()->id)
+                        ->wherePivot('activo', true)
+                        ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
+            })
             ->first();
         abort_unless($group, 403);
 
@@ -239,7 +245,14 @@ class AsistenciaController extends Controller
     {
         return Grupo::query()
             ->with(['ciclo', 'grado', 'seccion', 'docente'])
-            ->when($user->hasRole(Role::DOCENTE), fn (Builder $query) => $query->where('docente_id', $user->id))
+            ->when($user->hasRole(Role::DOCENTE), fn (Builder $query) => $query
+                ->where(function (Builder $group) use ($user) {
+                    $group->where('docente_id', $user->id)
+                        ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
+                            ->where('users.id', $user->id)
+                            ->wherePivot('activo', true)
+                            ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
+                }))
             ->when($user->hasRole(Role::ENCARGADO), fn (Builder $query) => $query
                 ->whereHas('asignaciones.estudiante.encargados', fn (Builder $guardians) => $guardians
                     ->where('usuario_id', $user->id)))

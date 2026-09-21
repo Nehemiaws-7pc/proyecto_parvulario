@@ -82,7 +82,7 @@ class EvaluacionController extends Controller
         $canRegister = $group && $period && $indicator
             && $request->user()->hasRole(Role::DOCENTE)
             && $group->activo
-            && $group->docente_id === $request->user()->id
+            && $group->tieneDocente($request->user())
             && $period->activo
             && $indicator->activo
             && $area->activo
@@ -92,7 +92,7 @@ class EvaluacionController extends Controller
         $canPublish = $group && $period && $indicator
             && $request->user()->hasRole(Role::DOCENTE)
             && $group->activo
-            && $group->docente_id === $request->user()->id
+            && $group->tieneDocente($request->user())
             && $evaluations->isNotEmpty()
             && $evaluations->contains(fn (Evaluacion $evaluation) => ! $evaluation->publicado);
 
@@ -304,7 +304,14 @@ class EvaluacionController extends Controller
         return Grupo::query()
             ->with(['ciclo', 'grado', 'seccion', 'docente'])
             ->when($user->hasRole(Role::DOCENTE), fn (Builder $query) => $query
-                ->where('docente_id', $user->id)->where('activo', true))
+                ->where('activo', true)
+                ->where(function (Builder $group) use ($user) {
+                    $group->where('docente_id', $user->id)
+                        ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
+                            ->where('users.id', $user->id)
+                            ->wherePivot('activo', true)
+                            ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
+                }))
             ->when($user->hasRole(Role::ENCARGADO), fn (Builder $query) => $query
                 ->whereHas('asignaciones.estudiante.encargados', fn (Builder $guardians) => $guardians
                     ->where('usuario_id', $user->id)))
@@ -326,7 +333,13 @@ class EvaluacionController extends Controller
     private function teacherGroup(User $user, int $groupId): Grupo
     {
         $group = Grupo::query()->whereKey($groupId)->where('activo', true)
-            ->where('docente_id', $user->id)->first();
+            ->where(function (Builder $group) use ($user) {
+                $group->where('docente_id', $user->id)
+                    ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
+                        ->where('users.id', $user->id)
+                        ->wherePivot('activo', true)
+                        ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
+            })->first();
         abort_unless($group, 403);
 
         return $group;

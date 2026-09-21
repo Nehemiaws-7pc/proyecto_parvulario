@@ -32,8 +32,13 @@ class EstudianteController extends Controller
             $query->whereHas('asignaciones', fn (Builder $assignment) => $assignment
                 ->where('estado', 'activa')
                 ->whereHas('grupo', fn (Builder $group) => $group
-                    ->where('docente_id', $user->id)
-                    ->where('activo', true)));
+                    ->where('activo', true)
+                    ->where(function (Builder $groupQuery) use ($user) {
+                        $groupQuery->where('docente_id', $user->id)
+                            ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
+                                ->whereKey($user->id)
+                                ->where('grupo_docente.activo', true));
+                    })));
         } elseif ($user->hasRole(Role::ENCARGADO)) {
             $query->whereHas('encargados', fn (Builder $guardian) => $guardian
                 ->where('usuario_id', $user->id));

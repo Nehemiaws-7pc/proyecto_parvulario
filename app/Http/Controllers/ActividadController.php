@@ -50,7 +50,7 @@ class ActividadController extends Controller
         $canCreate = $group
             && $request->user()->hasRole(Role::DOCENTE)
             && $group->activo
-            && $group->docente_id === $request->user()->id;
+            && $group->tieneDocente($request->user());
 
         return view('activities.index', compact('activities', 'canCreate', 'group', 'groups', 'periods'));
     }
@@ -254,7 +254,13 @@ class ActividadController extends Controller
             ->with(['ciclo', 'grado', 'seccion', 'docente'])
             ->when($user->hasRole(Role::DOCENTE), fn (Builder $query) => $query
                 ->where('activo', true)
-                ->where('docente_id', $user->id))
+                ->where(function (Builder $group) use ($user) {
+                    $group->where('docente_id', $user->id)
+                        ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
+                            ->where('users.id', $user->id)
+                            ->wherePivot('activo', true)
+                            ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
+                }))
             ->when($user->hasRole(Role::ENCARGADO), fn (Builder $query) => $query
                 ->whereHas('asignaciones.estudiante.encargados', fn (Builder $guardians) => $guardians
                     ->where('usuario_id', $user->id)))
@@ -280,7 +286,13 @@ class ActividadController extends Controller
         $group = Grupo::query()
             ->whereKey($groupId)
             ->where('activo', true)
-            ->where('docente_id', $user->id)
+            ->where(function (Builder $group) use ($user) {
+                $group->where('docente_id', $user->id)
+                    ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
+                        ->where('users.id', $user->id)
+                        ->wherePivot('activo', true)
+                        ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
+            })
             ->first();
         abort_unless($group, 403);
 

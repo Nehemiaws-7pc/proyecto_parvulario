@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActividadController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AvisoAvanceController;
 use App\Http\Controllers\ConfiguracionEvaluacionController;
 use App\Http\Controllers\EncargadoController;
 use App\Http\Controllers\EstructuraEscolarController;
@@ -40,6 +41,9 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('justificaciones', [JustificacionInasistenciaController::class, 'store'])->name('justificaciones.store');
     Route::put('justificaciones/{justificacion}/resolver', [JustificacionInasistenciaController::class, 'resolve'])
         ->name('justificaciones.resolve');
+
+    Route::get('avisos', [AvisoAvanceController::class, 'index'])->name('avisos.index');
+    Route::post('avisos', [AvisoAvanceController::class, 'store'])->name('avisos.store');
 
     Route::get('actividades', [ActividadController::class, 'index'])->name('actividades.index');
     Route::post('actividades', [ActividadController::class, 'store'])->name('actividades.store');
