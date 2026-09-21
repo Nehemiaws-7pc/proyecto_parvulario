@@ -25,7 +25,7 @@ class SchoolDataSeeder extends Seeder
 {
     public function run(): void
     {
-        $cycle = CicloEscolar::updateOrCreate(
+        $cycle = CicloEscolar::firstOrCreate(
             ['anio' => 2026],
             ['fecha_inicio' => '2026-01-15', 'fecha_fin' => '2026-10-31', 'estado' => 'activo'],
         );
@@ -33,7 +33,7 @@ class SchoolDataSeeder extends Seeder
             ['nombre' => 'Primer período', 'fecha_inicio' => '2026-01-15', 'fecha_fin' => '2026-05-31'],
             ['nombre' => 'Segundo período', 'fecha_inicio' => '2026-06-01', 'fecha_fin' => '2026-10-31'],
         ])->mapWithKeys(function (array $definition) use ($cycle) {
-            $period = Periodo::updateOrCreate(
+            $period = Periodo::firstOrCreate(
                 ['ciclo_id' => $cycle->id, 'nombre' => $definition['nombre']],
                 $definition + ['activo' => true],
             );
@@ -41,7 +41,7 @@ class SchoolDataSeeder extends Seeder
             return [$definition['nombre'] => $period];
         });
         $grades = collect(['Párvulos', 'Preparatoria'])->mapWithKeys(function (string $name) {
-            $grade = Grado::updateOrCreate(
+            $grade = Grado::firstOrCreate(
                 ['nombre' => $name],
                 ['descripcion' => "Nivel ficticio {$name} para demostración.", 'activo' => true],
             );
@@ -49,7 +49,7 @@ class SchoolDataSeeder extends Seeder
             return [$name => $grade];
         });
         $sections = collect(['A', 'B', 'C'])->mapWithKeys(function (string $name) {
-            $section = Seccion::updateOrCreate(
+            $section = Seccion::firstOrCreate(
                 ['nombre' => $name],
                 ['capacidad' => 25, 'activo' => true],
             );
@@ -62,7 +62,7 @@ class SchoolDataSeeder extends Seeder
             ['codigo' => 'NA', 'nombre' => 'Necesita apoyo', 'orden' => 3],
             ['codigo' => 'NE', 'nombre' => 'No evaluado', 'orden' => 4],
         ])->mapWithKeys(function (array $definition) {
-            $scale = EscalaEvaluacion::updateOrCreate(
+            $scale = EscalaEvaluacion::firstOrCreate(
                 ['codigo' => $definition['codigo']],
                 $definition + ['activo' => true],
             );
@@ -70,19 +70,19 @@ class SchoolDataSeeder extends Seeder
             return [$definition['codigo'] => $scale];
         });
 
-        $area = AreaAprendizaje::updateOrCreate(
+        $area = AreaAprendizaje::firstOrCreate(
             ['nombre' => 'Destrezas de aprendizaje'],
             ['descripcion' => 'Área ficticia para demostración.', 'activo' => true],
         );
         foreach ($grades as $grade) {
-            IndicadorEvaluacion::updateOrCreate(
+            IndicadorEvaluacion::firstOrCreate(
                 ['area_id' => $area->id, 'grado_id' => $grade->id, 'nombre' => 'Participa en experiencias de aprendizaje'],
                 ['descripcion' => 'Indicador ficticio configurable.', 'activo' => true],
             );
         }
 
         $guardianUser = User::where('codigo_usuario', 'ENC-0001')->firstOrFail();
-        $guardian = Encargado::updateOrCreate(
+        $guardian = Encargado::firstOrCreate(
             ['usuario_id' => $guardianUser->id],
             [
                 'nombre' => 'Familia Demo Lucero',
@@ -100,7 +100,7 @@ class SchoolDataSeeder extends Seeder
             foreach ($sections as $sectionName => $section) {
                 $groupNumber++;
                 $teacher = User::where('codigo_usuario', sprintf('DOC-%03d', $groupNumber))->firstOrFail();
-                $group = Grupo::updateOrCreate(
+                $group = Grupo::firstOrCreate(
                     ['ciclo_id' => $cycle->id, 'grado_id' => $grade->id, 'seccion_id' => $section->id],
                     ['docente_id' => $teacher->id, 'activo' => true],
                 );
@@ -108,7 +108,7 @@ class SchoolDataSeeder extends Seeder
 
                 for ($position = 1; $position <= 4; $position++) {
                     $studentNumber++;
-                    $student = Estudiante::updateOrCreate(
+                    $student = Estudiante::firstOrCreate(
                         ['codigo' => sprintf('EST-DEMO-%02d', $studentNumber)],
                         [
                             'nombres' => sprintf('Estudiante Demo %02d', $studentNumber),
@@ -121,27 +121,29 @@ class SchoolDataSeeder extends Seeder
                             'estado' => 'activo',
                         ],
                     );
-                    $assignment = $student->asignaciones()->updateOrCreate(
+                    $assignment = $student->asignaciones()->firstOrCreate(
                         ['grupo_id' => $group->id],
                         ['fecha_asignacion' => '2026-01-15', 'estado' => 'activa'],
                     );
                     $assignments->push($assignment);
-                    $student->encargados()->syncWithoutDetaching([
-                        $guardian->id => [
+                    if (! $student->encargados()->whereKey($guardian->id)->exists()) {
+                        $student->encargados()->attach($guardian->id, [
                             'parentesco' => 'Encargado de demostración',
                             'contacto_principal' => true,
                             'contacto_emergencia' => true,
                             'autorizado_recoger' => true,
-                        ],
-                    ]);
+                        ]);
+                    }
 
                     foreach (['2026-09-16', '2026-09-17', '2026-09-18'] as $dayIndex => $date) {
                         $state = match ($dayIndex) {
                             0 => Asistencia::PRESENTE,
-                            1 => $studentNumber % 3 === 0 ? Asistencia::AUSENTE : Asistencia::TARDE,
+                            1 => $studentNumber === 2
+                                ? Asistencia::JUSTIFICADO
+                                : ($studentNumber % 3 === 0 ? Asistencia::AUSENTE : Asistencia::TARDE),
                             default => $studentNumber % 4 === 0 ? Asistencia::AUSENTE : Asistencia::PRESENTE,
                         };
-                        Asistencia::updateOrCreate(
+                        Asistencia::firstOrCreate(
                             ['asignacion_id' => $assignment->id, 'fecha' => CarbonImmutable::parse($date)],
                             [
                                 'registrado_por' => $teacher->id,
@@ -152,7 +154,7 @@ class SchoolDataSeeder extends Seeder
                     }
                 }
 
-                $descriptiveActivity = Actividad::updateOrCreate(
+                $descriptiveActivity = Actividad::firstOrCreate(
                     ['grupo_id' => $group->id, 'periodo_id' => $secondPeriod->id, 'titulo' => "Proyecto descriptivo {$gradeName} {$sectionName}"],
                     [
                         'creado_por' => $teacher->id,
@@ -165,7 +167,7 @@ class SchoolDataSeeder extends Seeder
                     ],
                 );
                 $numericPublished = $groupNumber % 2 === 0;
-                $numericActivity = Actividad::updateOrCreate(
+                $numericActivity = Actividad::firstOrCreate(
                     ['grupo_id' => $group->id, 'periodo_id' => $secondPeriod->id, 'titulo' => "Conteo numérico {$gradeName} {$sectionName}"],
                     [
                         'creado_por' => $teacher->id,
@@ -180,7 +182,7 @@ class SchoolDataSeeder extends Seeder
 
                 foreach ($assignments->values() as $index => $assignment) {
                     $scale = $scales->get(['LA', 'EP', 'NA', 'NE'][$index]);
-                    Calificacion::updateOrCreate(
+                    Calificacion::firstOrCreate(
                         ['actividad_id' => $descriptiveActivity->id, 'estudiante_id' => $assignment->estudiante_id],
                         [
                             'asignacion_id' => $assignment->id,
@@ -190,7 +192,7 @@ class SchoolDataSeeder extends Seeder
                             'calificado_por' => $teacher->id,
                         ],
                     );
-                    Calificacion::updateOrCreate(
+                    Calificacion::firstOrCreate(
                         ['actividad_id' => $numericActivity->id, 'estudiante_id' => $assignment->estudiante_id],
                         [
                             'asignacion_id' => $assignment->id,
@@ -215,7 +217,7 @@ class SchoolDataSeeder extends Seeder
                 ->whereDate('fecha', '2026-09-17')
                 ->firstOrFail();
             $resolved = $definition['status'] !== JustificacionInasistencia::PENDIENTE;
-            $justification = JustificacionInasistencia::updateOrCreate(
+            $justification = JustificacionInasistencia::firstOrCreate(
                 ['asistencia_id' => $attendance->id],
                 [
                     'solicitado_por' => $guardianUser->id,
@@ -227,12 +229,8 @@ class SchoolDataSeeder extends Seeder
                 ],
             );
 
-            if ($definition['status'] === JustificacionInasistencia::ACEPTADA) {
-                $attendance->update(['estado' => Asistencia::JUSTIFICADO]);
-            }
-
             if ($resolved) {
-                Bitacora::updateOrCreate(
+                Bitacora::firstOrCreate(
                     [
                         'usuario_id' => $direction->id,
                         'accion' => 'resolver_justificacion',

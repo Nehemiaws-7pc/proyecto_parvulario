@@ -33,7 +33,7 @@ class DemoDataSeeder extends Seeder
         ];
 
         foreach ($users as [$role, $code, $name, $phone]) {
-            User::updateOrCreate(
+            User::firstOrCreate(
                 ['codigo_usuario' => $code],
                 [
                     'rol_id' => Role::where('nombre', $role)->value('id'),

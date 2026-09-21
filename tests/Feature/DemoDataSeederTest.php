@@ -2,13 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Models\Asistencia;
+use App\Models\Calificacion;
 use App\Models\Encargado;
 use App\Models\Grupo;
+use App\Models\JustificacionInasistencia;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -89,6 +93,103 @@ class DemoDataSeederTest extends TestCase
         foreach ($counts as $table => $count) {
             $this->assertDatabaseCount($table, $count);
         }
+    }
+
+    public function test_second_forced_seed_preserves_user_changes_and_only_restores_missing_demo_records(): void
+    {
+        Config::set('app.demo_data_enabled', true);
+        Config::set('app.demo_user_password', Str::password(16));
+        $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
+
+        $teacher = User::where('codigo_usuario', 'DOC-001')->firstOrFail();
+        $newPassword = Str::password(20);
+        $teacher->update([
+            'password' => $newPassword,
+            'cambiar_password' => false,
+        ]);
+        $changedPasswordHash = $teacher->getRawOriginal('password');
+
+        $changedGrade = Calificacion::whereNotNull('nota')->firstOrFail();
+        $changedGrade->update([
+            'nota' => 99.50,
+            'observacion' => 'Calificación modificada por un usuario.',
+        ]);
+
+        $changedAttendance = Asistencia::query()
+            ->where('estado', Asistencia::TARDE)
+            ->whereDoesntHave('justificacion')
+            ->firstOrFail();
+        $changedAttendance->update([
+            'estado' => Asistencia::PRESENTE,
+            'observacion' => 'Asistencia corregida por un usuario.',
+        ]);
+
+        $changedJustification = JustificacionInasistencia::where('estado', JustificacionInasistencia::PENDIENTE)
+            ->firstOrFail();
+        $changedJustification->update([
+            'motivo' => 'Motivo modificado por un usuario.',
+            'estado' => JustificacionInasistencia::RECHAZADA,
+            'respuesta' => 'Resolución modificada por un usuario.',
+        ]);
+
+        $assignment = $changedAttendance->asignacion()->with('grupo')->firstOrFail();
+        $guardian = User::where('codigo_usuario', 'ENC-0001')->firstOrFail();
+        $userAttendance = Asistencia::create([
+            'asignacion_id' => $assignment->id,
+            'registrado_por' => $assignment->grupo->docente_id,
+            'fecha' => '2026-09-21',
+            'estado' => Asistencia::AUSENTE,
+            'observacion' => 'Asistencia creada por un usuario.',
+        ]);
+        $userJustification = JustificacionInasistencia::create([
+            'asistencia_id' => $userAttendance->id,
+            'solicitado_por' => $guardian->id,
+            'motivo' => 'Justificación creada por un usuario.',
+            'estado' => JustificacionInasistencia::PENDIENTE,
+        ]);
+
+        $missingGrade = Calificacion::whereKeyNot($changedGrade->id)->firstOrFail();
+        $missingGradeIdentity = [
+            'actividad_id' => $missingGrade->actividad_id,
+            'estudiante_id' => $missingGrade->estudiante_id,
+        ];
+        $missingGrade->delete();
+
+        Config::set('app.demo_user_password', Str::password(24));
+        $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
+
+        $teacher->refresh();
+        $this->assertSame($changedPasswordHash, $teacher->getRawOriginal('password'));
+        $this->assertTrue(Hash::check($newPassword, $teacher->password));
+        $this->assertFalse($teacher->cambiar_password);
+
+        $changedGrade->refresh();
+        $this->assertSame('99.50', $changedGrade->nota);
+        $this->assertSame('Calificación modificada por un usuario.', $changedGrade->observacion);
+
+        $changedAttendance->refresh();
+        $this->assertSame(Asistencia::PRESENTE, $changedAttendance->estado);
+        $this->assertSame('Asistencia corregida por un usuario.', $changedAttendance->observacion);
+
+        $changedJustification->refresh();
+        $this->assertSame(JustificacionInasistencia::RECHAZADA, $changedJustification->estado);
+        $this->assertSame('Motivo modificado por un usuario.', $changedJustification->motivo);
+        $this->assertSame('Resolución modificada por un usuario.', $changedJustification->respuesta);
+
+        $this->assertDatabaseHas('asistencias', [
+            'id' => $userAttendance->id,
+            'estado' => Asistencia::AUSENTE,
+            'observacion' => 'Asistencia creada por un usuario.',
+        ]);
+        $this->assertDatabaseHas('justificaciones_inasistencia', [
+            'id' => $userJustification->id,
+            'motivo' => 'Justificación creada por un usuario.',
+            'estado' => JustificacionInasistencia::PENDIENTE,
+        ]);
+        $this->assertDatabaseHas('calificaciones', $missingGradeIdentity);
+        $this->assertDatabaseCount('calificaciones', 48);
+        $this->assertDatabaseCount('asistencias', 73);
+        $this->assertDatabaseCount('justificaciones_inasistencia', 4);
     }
 
     private function countTable(string $table): int
