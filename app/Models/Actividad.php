@@ -23,8 +23,11 @@ class Actividad extends Model
         'creado_por',
         'titulo',
         'descripcion',
+        'area_aprendizaje',
         'fecha',
+        'punteo_maximo',
         'tipo',
+        'tipo_docente',
         'publicada',
         'publicada_at',
         'publicada_por',
@@ -36,6 +39,7 @@ class Actividad extends Model
             'fecha' => 'date',
             'publicada' => 'boolean',
             'publicada_at' => 'datetime',
+            'punteo_maximo' => 'decimal:2',
         ];
     }
 

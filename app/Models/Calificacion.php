@@ -18,13 +18,15 @@ class Calificacion extends Model
         'estudiante_id',
         'escala_id',
         'nota',
+        'estado',
         'observacion',
         'calificado_por',
+        'calificado_at',
     ];
 
     protected function casts(): array
     {
-        return ['nota' => 'decimal:2'];
+        return ['nota' => 'decimal:2', 'calificado_at' => 'datetime'];
     }
 
     public function actividad(): BelongsTo

@@ -308,7 +308,7 @@ class EvaluacionController extends Controller
                 ->where(function (Builder $group) use ($user) {
                     $group->where('docente_id', $user->id)
                         ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
-                            ->where('users.id', $user->id)
+                            ->whereKey($user->id)
                             ->wherePivot('activo', true)
                             ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
                 }))
@@ -336,7 +336,7 @@ class EvaluacionController extends Controller
             ->where(function (Builder $group) use ($user) {
                 $group->where('docente_id', $user->id)
                     ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
-                        ->where('users.id', $user->id)
+                        ->whereKey($user->id)
                         ->wherePivot('activo', true)
                         ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
             })->first();

@@ -38,8 +38,14 @@ class ActividadController extends Controller
                 ->where('grupo_id', $group->id)
                 ->when($request->user()->hasRole(Role::ENCARGADO), fn (Builder $query) => $query
                     ->where('publicada', true)
-                    ->whereHas('calificaciones.estudiante.encargados', fn (Builder $guardians) => $guardians
-                        ->where('usuario_id', $request->user()->id)))
+                    ->whereHas('calificaciones', fn (Builder $grades) => $grades
+                        ->where(function (Builder $state) {
+                            $state->where('estado', 'calificada')->orWhere(function (Builder $legacy) {
+                                $legacy->where(fn (Builder $value) => $value->whereNotNull('nota')->orWhereNotNull('escala_id'));
+                            });
+                        })
+                        ->whereHas('estudiante.encargados', fn (Builder $guardians) => $guardians
+                            ->where('usuario_id', $request->user()->id))))
                 ->with(['periodo', 'creadoPor'])
                 ->withCount('calificaciones')
                 ->orderByDesc('fecha')
@@ -48,7 +54,7 @@ class ActividadController extends Controller
         }
 
         $canCreate = $group
-            && $request->user()->hasRole(Role::DOCENTE)
+            && $request->user()->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE])
             && $group->activo
             && $group->tieneDocente($request->user());
 
@@ -63,8 +69,10 @@ class ActividadController extends Controller
             'periodo_id' => ['required', 'integer', 'exists:periodos,id'],
             'titulo' => ['required', 'string', 'max:150'],
             'descripcion' => ['nullable', 'string', 'max:3000'],
+            'area_aprendizaje' => ['nullable', 'string', 'max:120'],
             'fecha' => ['required', 'date_format:Y-m-d'],
             'tipo' => ['required', Rule::in(array_keys(Actividad::tipos()))],
+            'punteo_maximo' => ['nullable', 'numeric', 'gt:0', 'max:9999.99'],
         ]);
 
         $group = $this->teacherGroup($request->user(), (int) $validated['grupo_id']);
@@ -96,7 +104,9 @@ class ActividadController extends Controller
 
         $activity = Actividad::create([
             ...$validated,
+            'punteo_maximo' => $validated['punteo_maximo'] ?? 100,
             'creado_por' => $request->user()->id,
+            'tipo_docente' => $this->teachingType($request->user(), $group),
             'publicada' => false,
         ]);
 
@@ -111,6 +121,11 @@ class ActividadController extends Controller
 
         $grades = $actividad->calificaciones()
             ->when($request->user()->hasRole(Role::ENCARGADO), fn (Builder $query) => $query
+                ->where(function (Builder $state) {
+                    $state->where('estado', 'calificada')->orWhere(function (Builder $legacy) {
+                        $legacy->where(fn (Builder $value) => $value->whereNotNull('nota')->orWhereNotNull('escala_id'));
+                    });
+                })
                 ->whereHas('estudiante.encargados', fn (Builder $guardians) => $guardians
                     ->where('usuario_id', $request->user()->id)))
             ->with(['estudiante', 'escala'])
@@ -179,8 +194,8 @@ class ActividadController extends Controller
             }
 
             if ($actividad->tipo === Actividad::NUMERICA
-                && (! is_numeric($result) || (float) $result < 0 || (float) $result > 100)) {
-                throw ValidationException::withMessages(['resultados' => 'Las notas deben estar entre 0 y 100.']);
+                && (! is_numeric($result) || (float) $result < 0 || (float) $result > (float) $actividad->punteo_maximo)) {
+                throw ValidationException::withMessages(['resultados' => 'Las notas deben estar entre 0 y el punteo máximo.']);
             }
         }
 
@@ -196,8 +211,10 @@ class ActividadController extends Controller
                         'asignacion_id' => $assignment->id,
                         'escala_id' => $actividad->tipo === Actividad::DESCRIPTIVA ? (int) $result : null,
                         'nota' => $actividad->tipo === Actividad::NUMERICA ? (float) $result : null,
+                        'estado' => 'calificada',
                         'observacion' => $validated['observaciones'][$assignment->id] ?? null,
                         'calificado_por' => $request->user()->id,
+                        'calificado_at' => now(),
                     ],
                 );
             }
@@ -257,8 +274,8 @@ class ActividadController extends Controller
                 ->where(function (Builder $group) use ($user) {
                     $group->where('docente_id', $user->id)
                         ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
-                            ->where('users.id', $user->id)
-                            ->wherePivot('activo', true)
+                            ->whereKey($user->id)
+                            ->where('grupo_docente.activo', true)
                             ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
                 }))
             ->when($user->hasRole(Role::ENCARGADO), fn (Builder $query) => $query
@@ -283,19 +300,27 @@ class ActividadController extends Controller
 
     private function teacherGroup(User $user, int $groupId): Grupo
     {
+        if ($user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO])) {
+            return Grupo::query()->whereKey($groupId)->where('activo', true)->firstOrFail();
+        }
         $group = Grupo::query()
             ->whereKey($groupId)
             ->where('activo', true)
             ->where(function (Builder $group) use ($user) {
                 $group->where('docente_id', $user->id)
                     ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
-                        ->where('users.id', $user->id)
-                        ->wherePivot('activo', true)
+                        ->whereKey($user->id)
+                        ->where('grupo_docente.activo', true)
                         ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
             })
             ->first();
         abort_unless($group, 403);
 
         return $group;
+    }
+
+    private function teachingType(User $user, Grupo $group): string
+    {
+        return $group->docentes()->whereKey($user->id)->wherePivot('activo', true)->value('grupo_docente.tipo') ?: 'titular';
     }
 }

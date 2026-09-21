@@ -99,6 +99,49 @@ class ActivityTest extends TestCase
         $groupResponse->assertOk()->assertDontSee($draft->titulo);
     }
 
+    public function test_carmen_creates_physical_education_activities_for_all_groups_and_josefa_is_denied(): void
+    {
+        $this->seedDemoData();
+        $carmen = User::where('codigo_usuario', 'DOC-006')->firstOrFail();
+        $josefa = User::where('codigo_usuario', 'DOC-007')->firstOrFail();
+        foreach (Grupo::where('activo', true)->get() as $group) {
+            $period = Periodo::query()->where('ciclo_id', $group->ciclo_id)->where('activo', true)->firstOrFail();
+            $this->actingAs($carmen)->post(route('actividades.store'), [
+                'grupo_id' => $group->id,
+                'periodo_id' => $period->id,
+                'titulo' => 'Educación Física '.$group->id,
+                'descripcion' => 'Actividad física ficticia.',
+                'area_aprendizaje' => 'Educación Física',
+                'fecha' => $period->fecha_inicio->toDateString(),
+                'tipo' => Actividad::NUMERICA,
+                'punteo_maximo' => 20,
+            ])->assertRedirect();
+        }
+
+        $this->assertSame(6, Actividad::where('tipo_docente', 'educacion_fisica')->count());
+        $this->actingAs($josefa)->post(route('actividades.store'), [
+            'grupo_id' => Grupo::first()->id,
+            'periodo_id' => $period->id,
+            'titulo' => 'Actividad no permitida',
+            'area_aprendizaje' => 'Especial',
+            'fecha' => $period->fecha_inicio->toDateString(),
+            'tipo' => Actividad::NUMERICA,
+            'punteo_maximo' => 10,
+        ])->assertForbidden();
+    }
+
+    public function test_score_cannot_exceed_activity_maximum(): void
+    {
+        $this->seedDemoData();
+        $teacher = User::where('codigo_usuario', 'DOC-001')->firstOrFail();
+        $activity = Actividad::where('tipo', Actividad::NUMERICA)->firstOrFail();
+        $assignment = $activity->grupo->asignaciones()->where('estado', 'activa')->firstOrFail();
+
+        $this->actingAs($teacher)->post(route('actividades.calificaciones.store', $activity), [
+            'resultados' => [$assignment->id => (float) $activity->punteo_maximo + 1],
+        ])->assertSessionHasErrors('resultados');
+    }
+
     private function seedDemoData(): void
     {
         Config::set('demo.enabled', true);
