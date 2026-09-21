@@ -205,7 +205,7 @@ class DemoDataSeederTest extends TestCase
         $this->assertDatabaseCount('justificaciones_inasistencia', 4);
     }
 
-    public function test_password_reset_is_explicit_and_limited_to_the_eight_demo_accounts(): void
+    public function test_password_reset_restores_all_ten_demo_accounts_without_duplicates(): void
     {
         $demoCodes = [
             'DIR-001',
@@ -215,6 +215,8 @@ class DemoDataSeederTest extends TestCase
             'DOC-004',
             'DOC-005',
             'DOC-006',
+            'DOC-007',
+            'ADM-001',
             'ENC-0001',
         ];
         Config::set('demo.enabled', true);
@@ -246,12 +248,16 @@ class DemoDataSeederTest extends TestCase
         $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
 
         $demoUsers = User::whereIn('codigo_usuario', $demoCodes)->get();
-        $this->assertCount(8, $demoUsers);
+        $this->assertCount(10, $demoUsers);
         foreach ($demoUsers as $user) {
             $this->assertTrue(Hash::check('Demo2026!', $user->password));
             $this->assertTrue($user->activo);
             $this->assertFalse($user->cambiar_password);
+            $this->assertTrue($user->role->activo);
         }
+
+        $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
+        $this->assertSame(10, User::whereIn('codigo_usuario', $demoCodes)->count());
 
         $unrelated->refresh();
         $this->assertSame($unrelatedHash, $unrelated->getRawOriginal('password'));

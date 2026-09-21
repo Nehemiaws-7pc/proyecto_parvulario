@@ -37,10 +37,7 @@ class DemoDataSeeder extends Seeder
             [Role::DOCENTE, 'DOC-007', 'Josefa Patricia', '5550-0207', []],
             [Role::ENCARGADO, 'ENC-0001', 'Marta López', '5550-0301', ['Familia Demo Lucero']],
         ];
-        $resetCodes = [
-            'DIR-001', 'DOC-001', 'DOC-002', 'DOC-003',
-            'DOC-004', 'DOC-005', 'DOC-006', 'ENC-0001',
-        ];
+        $demoCodes = array_column($users, 1);
 
         foreach ($users as [$role, $code, $name, $phone, $legacyNames]) {
             $user = User::firstOrCreate(
@@ -60,7 +57,7 @@ class DemoDataSeeder extends Seeder
                 $user->update(['nombre' => $name]);
             }
 
-            if ($resetPasswords && in_array($code, $resetCodes, true)) {
+            if ($resetPasswords && in_array($code, $demoCodes, true)) {
                 $user->forceFill([
                     'password' => $hashedPassword,
                     'activo' => true,
