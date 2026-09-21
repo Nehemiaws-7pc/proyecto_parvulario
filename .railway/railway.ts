@@ -18,7 +18,7 @@ export default defineRailway(() => {
             builder: "RAILPACK",
         },
         preDeploy:
-            "php artisan migrate --force && php artisan db:seed --force && php artisan config:cache && php artisan route:cache && php artisan view:cache",
+            "php artisan config:clear && php artisan migrate --force && php artisan db:seed --force && php artisan config:cache && php artisan route:cache && php artisan view:cache",
         healthcheck: "/up",
         healthcheckTimeout: 300,
         env: {
@@ -36,6 +36,7 @@ export default defineRailway(() => {
             CACHE_STORE: "database",
             QUEUE_CONNECTION: "sync",
             DEMO_DATA_ENABLED: preserve(),
+            DEMO_RESET_PASSWORDS: preserve(),
             DEMO_USER_PASSWORD: preserve(),
             RAILPACK_NODE_NPM_INSTALL: "npm ci",
             RAILPACK_PHP_EXTENSIONS: "pdo_mysql",

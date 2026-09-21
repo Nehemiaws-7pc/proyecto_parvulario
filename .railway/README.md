@@ -16,10 +16,15 @@ Antes de aplicar la infraestructura:
    caracteres; no lo guardes en Git.
 7. Cambia `DEMO_DATA_ENABLED` a `true` únicamente en el entorno de demostración
    y vuelve a desplegar para que el predeploy cargue los datos.
+8. Mantén `DEMO_RESET_PASSWORDS=false`. Si necesitas recuperar las ocho cuentas
+   ficticias, cámbialo temporalmente a `true`, despliega una vez y vuelve a
+   establecerlo en `false`.
 
 Con los datos de demostración habilitados se crean de forma idempotente
-`DIR-001`, `DOC-001` a `DOC-006` y `ENC-0001`. Todos usan el valor secreto de
-`DEMO_USER_PASSWORD` y quedan marcados para cambiar la contraseña.
+`DIR-001`, `DOC-001` a `DOC-006` y `ENC-0001`. La ejecución normal conserva sus
+contraseñas y estados actuales. El restablecimiento explícito usa el valor
+secreto de `DEMO_USER_PASSWORD`, activa las cuentas y deja
+`cambiar_password=false`.
 
 Revisa y aplica la definición con:
 
@@ -31,4 +36,6 @@ railway config apply
 El predeploy aplica migraciones, ejecuta seeders idempotentes y valida las
 cachés de configuración, rutas y vistas. Railway detiene el despliegue si el
 comando termina con error. `RAILPACK_SKIP_MIGRATIONS=true` evita que Railpack
-repita las migraciones y los seeders durante el arranque del contenedor.
+repita las migraciones y los seeders durante el arranque del contenedor. La
+limpieza inicial de configuración permite que un cambio temporal de
+`DEMO_RESET_PASSWORDS` se lea desde las variables actuales del servicio.

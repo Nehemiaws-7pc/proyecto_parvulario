@@ -22,7 +22,7 @@ class DemoDataSeederTest extends TestCase
 
     public function test_demo_data_is_not_loaded_when_it_is_disabled(): void
     {
-        Config::set('app.demo_data_enabled', false);
+        Config::set('demo.enabled', false);
 
         $this->seed(DatabaseSeeder::class);
 
@@ -33,8 +33,8 @@ class DemoDataSeederTest extends TestCase
 
     public function test_demo_data_is_idempotent_when_it_is_enabled(): void
     {
-        Config::set('app.demo_data_enabled', true);
-        Config::set('app.demo_user_password', Str::password(16));
+        Config::set('demo.enabled', true);
+        Config::set('demo.user_password', Str::password(16));
 
         $this->seed(DatabaseSeeder::class);
 
@@ -97,8 +97,8 @@ class DemoDataSeederTest extends TestCase
 
     public function test_second_forced_seed_preserves_user_changes_and_only_restores_missing_demo_records(): void
     {
-        Config::set('app.demo_data_enabled', true);
-        Config::set('app.demo_user_password', Str::password(16));
+        Config::set('demo.enabled', true);
+        Config::set('demo.user_password', Str::password(16));
         $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
 
         $teacher = User::where('codigo_usuario', 'DOC-001')->firstOrFail();
@@ -155,7 +155,7 @@ class DemoDataSeederTest extends TestCase
         ];
         $missingGrade->delete();
 
-        Config::set('app.demo_user_password', Str::password(24));
+        Config::set('demo.user_password', Str::password(24));
         $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
 
         $teacher->refresh();
@@ -190,6 +190,70 @@ class DemoDataSeederTest extends TestCase
         $this->assertDatabaseCount('calificaciones', 48);
         $this->assertDatabaseCount('asistencias', 73);
         $this->assertDatabaseCount('justificaciones_inasistencia', 4);
+    }
+
+    public function test_password_reset_is_explicit_and_limited_to_the_eight_demo_accounts(): void
+    {
+        $demoCodes = [
+            'DIR-001',
+            'DOC-001',
+            'DOC-002',
+            'DOC-003',
+            'DOC-004',
+            'DOC-005',
+            'DOC-006',
+            'ENC-0001',
+        ];
+        Config::set('demo.enabled', true);
+        Config::set('demo.user_password', Str::password(16));
+        Config::set('demo.reset_passwords', false);
+        $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
+
+        foreach (User::whereIn('codigo_usuario', $demoCodes)->get() as $user) {
+            $user->update([
+                'password' => Str::password(20),
+                'activo' => false,
+                'cambiar_password' => true,
+            ]);
+        }
+
+        $unrelatedPassword = Str::password(20);
+        $unrelated = User::factory()->create([
+            'rol_id' => Role::where('nombre', Role::DIRECCION)->value('id'),
+            'codigo_usuario' => 'USR-NO-DEMO',
+            'password' => $unrelatedPassword,
+            'activo' => false,
+            'cambiar_password' => true,
+        ]);
+        $unrelatedHash = $unrelated->getRawOriginal('password');
+        $resetPassword = Str::password(24);
+
+        Config::set('demo.user_password', $resetPassword);
+        Config::set('demo.reset_passwords', true);
+        $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
+
+        $demoUsers = User::whereIn('codigo_usuario', $demoCodes)->get();
+        $this->assertCount(8, $demoUsers);
+        foreach ($demoUsers as $user) {
+            $this->assertTrue(Hash::check($resetPassword, $user->password));
+            $this->assertTrue($user->activo);
+            $this->assertFalse($user->cambiar_password);
+        }
+
+        $unrelated->refresh();
+        $this->assertSame($unrelatedHash, $unrelated->getRawOriginal('password'));
+        $this->assertTrue(Hash::check($unrelatedPassword, $unrelated->password));
+        $this->assertFalse($unrelated->activo);
+        $this->assertTrue($unrelated->cambiar_password);
+
+        Config::set('demo.user_password', Str::password(24));
+        Config::set('demo.reset_passwords', false);
+        $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
+
+        foreach (User::whereIn('codigo_usuario', $demoCodes)->get() as $user) {
+            $this->assertTrue(Hash::check($resetPassword, $user->password));
+            $this->assertFalse($user->cambiar_password);
+        }
     }
 
     private function countTable(string $table): int

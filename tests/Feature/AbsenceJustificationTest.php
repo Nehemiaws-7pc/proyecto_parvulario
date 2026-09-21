@@ -90,8 +90,8 @@ class AbsenceJustificationTest extends TestCase
 
     private function seedDemoData(): void
     {
-        Config::set('app.demo_data_enabled', true);
-        Config::set('app.demo_user_password', Str::password(16));
+        Config::set('demo.enabled', true);
+        Config::set('demo.user_password', Str::password(16));
         $this->seed(DatabaseSeeder::class);
     }
 }

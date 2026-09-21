@@ -11,11 +11,12 @@ class DemoDataSeeder extends Seeder
 {
     public function run(): void
     {
-        if (! config('app.demo_data_enabled')) {
+        if (! config('demo.enabled')) {
             return;
         }
 
-        $password = config('app.demo_user_password');
+        $password = config('demo.user_password');
+        $resetPasswords = (bool) config('demo.reset_passwords');
 
         if (! is_string($password) || strlen($password) < 8) {
             throw new RuntimeException('DEMO_USER_PASSWORD must contain at least 8 characters.');
@@ -33,7 +34,7 @@ class DemoDataSeeder extends Seeder
         ];
 
         foreach ($users as [$role, $code, $name, $phone]) {
-            User::firstOrCreate(
+            $user = User::firstOrCreate(
                 ['codigo_usuario' => $code],
                 [
                     'rol_id' => Role::where('nombre', $role)->value('id'),
@@ -42,9 +43,17 @@ class DemoDataSeeder extends Seeder
                     'telefono' => $phone,
                     'correo' => null,
                     'activo' => true,
-                    'cambiar_password' => true,
+                    'cambiar_password' => ! $resetPasswords,
                 ],
             );
+
+            if ($resetPasswords) {
+                $user->forceFill([
+                    'password' => $password,
+                    'activo' => true,
+                    'cambiar_password' => false,
+                ])->save();
+            }
         }
 
         $this->call(SchoolDataSeeder::class);
