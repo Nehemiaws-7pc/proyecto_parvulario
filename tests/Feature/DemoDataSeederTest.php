@@ -226,7 +226,7 @@ class DemoDataSeederTest extends TestCase
             'cambiar_password' => true,
         ]);
         $unrelatedHash = $unrelated->getRawOriginal('password');
-        $resetPassword = Str::password(24);
+        $resetPassword = 'Demo2026!';
 
         Config::set('demo.user_password', $resetPassword);
         Config::set('demo.reset_passwords', true);
@@ -235,7 +235,7 @@ class DemoDataSeederTest extends TestCase
         $demoUsers = User::whereIn('codigo_usuario', $demoCodes)->get();
         $this->assertCount(8, $demoUsers);
         foreach ($demoUsers as $user) {
-            $this->assertTrue(Hash::check($resetPassword, $user->password));
+            $this->assertTrue(Hash::check('Demo2026!', $user->password));
             $this->assertTrue($user->activo);
             $this->assertFalse($user->cambiar_password);
         }
@@ -251,7 +251,7 @@ class DemoDataSeederTest extends TestCase
         $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
 
         foreach (User::whereIn('codigo_usuario', $demoCodes)->get() as $user) {
-            $this->assertTrue(Hash::check($resetPassword, $user->password));
+            $this->assertTrue(Hash::check('Demo2026!', $user->password));
             $this->assertFalse($user->cambiar_password);
         }
     }

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use RuntimeException;
 
 class DemoDataSeeder extends Seeder
@@ -21,6 +22,8 @@ class DemoDataSeeder extends Seeder
         if (! is_string($password) || strlen($password) < 8) {
             throw new RuntimeException('DEMO_USER_PASSWORD must contain at least 8 characters.');
         }
+
+        $hashedPassword = Hash::make($password);
 
         $users = [
             [Role::DIRECCION, 'DIR-001', 'Dirección Demo Arcoíris', '5550-0101'],
@@ -39,7 +42,7 @@ class DemoDataSeeder extends Seeder
                 [
                     'rol_id' => Role::where('nombre', $role)->value('id'),
                     'nombre' => $name,
-                    'password' => $password,
+                    'password' => $hashedPassword,
                     'telefono' => $phone,
                     'correo' => null,
                     'activo' => true,
@@ -49,7 +52,7 @@ class DemoDataSeeder extends Seeder
 
             if ($resetPasswords) {
                 $user->forceFill([
-                    'password' => $password,
+                    'password' => $hashedPassword,
                     'activo' => true,
                     'cambiar_password' => false,
                 ])->save();

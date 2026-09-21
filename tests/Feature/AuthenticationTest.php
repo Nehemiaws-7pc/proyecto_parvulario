@@ -7,7 +7,9 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Vite;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -110,6 +112,24 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $this->assertSame(2, Bitacora::where('usuario_id', $user->id)->count());
+    }
+
+    public function test_demo_direction_account_can_login_with_the_controlled_reset_password(): void
+    {
+        Config::set('demo.enabled', true);
+        Config::set('demo.user_password', 'Demo2026!');
+        Config::set('demo.reset_passwords', true);
+        $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
+
+        $user = User::where('codigo_usuario', 'DIR-001')->firstOrFail();
+        $this->assertTrue(Hash::check('Demo2026!', $user->password));
+
+        $this->post(route('login.store'), [
+            'codigo_usuario' => 'DIR-001',
+            'password' => 'Demo2026!',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_invalid_password_is_rejected(): void
