@@ -19,12 +19,20 @@ class DemoAccessTest extends TestCase
     {
         $this->seedDemoData();
 
-        foreach (range(1, 6) as $number) {
+        foreach (range(1, 5) as $number) {
             $teacher = User::where('codigo_usuario', sprintf('DOC-%03d', $number))->firstOrFail();
             $response = $this->actingAs($teacher)->get(route('estudiantes.index'));
 
             $response->assertOk();
-            $this->assertSame(4, $response->viewData('estudiantes')->total());
+            $this->assertSame($number === 4 ? 8 : 4, $response->viewData('estudiantes')->total());
+        }
+
+        foreach ([6, 7] as $number) {
+            $teacher = User::where('codigo_usuario', sprintf('DOC-%03d', $number))->firstOrFail();
+            $response = $this->actingAs($teacher)->get(route('estudiantes.index'));
+
+            $response->assertOk();
+            $this->assertSame(24, $response->viewData('estudiantes')->total());
         }
 
         $direction = User::where('codigo_usuario', 'DIR-001')->firstOrFail();

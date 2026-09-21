@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Grupo extends Model
@@ -36,6 +37,30 @@ class Grupo extends Model
     public function docente(): BelongsTo
     {
         return $this->belongsTo(User::class, 'docente_id');
+    }
+
+    public function docentes(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'grupo_docente', 'grupo_id', 'docente_id')
+            ->withPivot(['tipo', 'activo', 'fecha_inicio', 'fecha_fin'])
+            ->withTimestamps();
+    }
+
+    public function asignacionesDocentes(): HasMany
+    {
+        return $this->hasMany(AsignacionDocente::class, 'grupo_id');
+    }
+
+    public function tieneDocente(User|int $docente, ?string $tipo = null): bool
+    {
+        $docenteId = $docente instanceof User ? $docente->getKey() : $docente;
+
+        return $this->docentes()
+            ->whereKey($docenteId)
+            ->wherePivot('activo', true)
+            ->when($tipo, fn ($query) => $query->wherePivot('tipo', $tipo))
+            ->exists()
+            || ($tipo === null && (int) $this->docente_id === (int) $docenteId);
     }
 
     public function asignaciones(): HasMany

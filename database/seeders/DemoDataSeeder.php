@@ -26,17 +26,23 @@ class DemoDataSeeder extends Seeder
         $hashedPassword = Hash::make($password);
 
         $users = [
-            [Role::DIRECCION, 'DIR-001', 'Dirección Demo Arcoíris', '5550-0101'],
-            [Role::DOCENTE, 'DOC-001', 'Docente Demo Aurora', '5550-0201'],
-            [Role::DOCENTE, 'DOC-002', 'Docente Demo Brisa', '5550-0202'],
-            [Role::DOCENTE, 'DOC-003', 'Docente Demo Cielo', '5550-0203'],
-            [Role::DOCENTE, 'DOC-004', 'Docente Demo Dalia', '5550-0204'],
-            [Role::DOCENTE, 'DOC-005', 'Docente Demo Estrella', '5550-0205'],
-            [Role::DOCENTE, 'DOC-006', 'Docente Demo Fantasía', '5550-0206'],
-            [Role::ENCARGADO, 'ENC-0001', 'Familia Demo Lucero', '5550-0301'],
+            [Role::DIRECCION, 'DIR-001', 'Carlota', '5550-0101', ['Dirección Demo Arcoíris']],
+            [Role::ADMINISTRATIVO, 'ADM-001', 'Rosa Pérez', '5550-0102', []],
+            [Role::DOCENTE, 'DOC-001', 'Sandra', '5550-0201', ['Docente Demo Aurora']],
+            [Role::DOCENTE, 'DOC-002', 'Miriam', '5550-0202', ['Docente Demo Brisa']],
+            [Role::DOCENTE, 'DOC-003', 'Yolanda', '5550-0203', ['Docente Demo Cielo']],
+            [Role::DOCENTE, 'DOC-004', 'Blanca', '5550-0204', ['Docente Demo Dalia']],
+            [Role::DOCENTE, 'DOC-005', 'Reyna', '5550-0205', ['Docente Demo Estrella']],
+            [Role::DOCENTE, 'DOC-006', 'Carmen', '5550-0206', ['Docente Demo Fantasía']],
+            [Role::DOCENTE, 'DOC-007', 'Josefa Patricia', '5550-0207', []],
+            [Role::ENCARGADO, 'ENC-0001', 'Marta López', '5550-0301', ['Familia Demo Lucero']],
+        ];
+        $resetCodes = [
+            'DIR-001', 'DOC-001', 'DOC-002', 'DOC-003',
+            'DOC-004', 'DOC-005', 'DOC-006', 'ENC-0001',
         ];
 
-        foreach ($users as [$role, $code, $name, $phone]) {
+        foreach ($users as [$role, $code, $name, $phone, $legacyNames]) {
             $user = User::firstOrCreate(
                 ['codigo_usuario' => $code],
                 [
@@ -46,11 +52,15 @@ class DemoDataSeeder extends Seeder
                     'telefono' => $phone,
                     'correo' => null,
                     'activo' => true,
-                    'cambiar_password' => ! $resetPasswords,
+                    'cambiar_password' => true,
                 ],
             );
 
-            if ($resetPasswords) {
+            if ($legacyNames !== [] && in_array($user->nombre, $legacyNames, true)) {
+                $user->update(['nombre' => $name]);
+            }
+
+            if ($resetPasswords && in_array($code, $resetCodes, true)) {
                 $user->forceFill([
                     'password' => $hashedPassword,
                     'activo' => true,
