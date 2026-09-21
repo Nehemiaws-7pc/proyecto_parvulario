@@ -56,7 +56,9 @@ La aplicación quedará disponible normalmente en `http://127.0.0.1:8000`.
 
 ## Usuarios ficticios de desarrollo
 
-El comando `php artisan migrate --seed` crea cuatro cuentas ficticias. Todas usan la contraseña temporal `Demo1234!`:
+El comando `php artisan migrate --seed` crea cuatro cuentas ficticias solo cuando
+`DEMO_DATA_ENABLED=true`. La contraseña se toma de `DEMO_USER_PASSWORD` y nunca
+debe guardarse en Git:
 
 | Rol | Código |
 | --- | --- |
