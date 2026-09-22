@@ -88,7 +88,8 @@
 
                     @if ($canManage)
                         <hr>
-                        <h3 class="h6 fw-bold">Agregar encargado</h3>
+                        <a class="btn btn-outline-primary mb-3" href="{{ route('encargados.index', $estudiante) }}">Buscar, crear o desvincular encargados</a>
+                        <h3 class="h6 fw-bold">Agregar contacto</h3>
                         <form method="POST" action="{{ route('estudiantes.encargados.store', $estudiante) }}">
                             @csrf
                             @include('students._guardian-form', ['guardian' => null])

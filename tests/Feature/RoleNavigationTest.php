@@ -24,6 +24,8 @@ class RoleNavigationTest extends TestCase
     {
         Config::set('demo.enabled', true);
         $this->seed(DatabaseSeeder::class);
+        // Estos escenarios verifican permisos después del cambio inicial de contraseña.
+        User::query()->update(['cambiar_password' => false]);
         $guardian = User::where('codigo_usuario', 'ENC-0001')->firstOrFail();
 
         $dashboard = $this->actingAs($guardian)->get(route('dashboard'))->assertOk();

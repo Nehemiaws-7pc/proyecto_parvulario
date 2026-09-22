@@ -17,6 +17,8 @@ class AvisoAvanceTest extends TestCase
     {
         Config::set('demo.enabled', true);
         $this->seed(DatabaseSeeder::class);
+        // Estos escenarios verifican permisos después del cambio inicial de contraseña.
+        User::query()->update(['cambiar_password' => false]);
         $special = User::where('codigo_usuario', 'DOC-007')->firstOrFail();
         $guardian = User::where('codigo_usuario', 'ENC-0001')->firstOrFail();
         $student = $guardian->encargado->estudiantes()->firstOrFail();
@@ -35,6 +37,8 @@ class AvisoAvanceTest extends TestCase
     {
         Config::set('demo.enabled', true);
         $this->seed(DatabaseSeeder::class);
+        // Estos escenarios verifican permisos después del cambio inicial de contraseña.
+        User::query()->update(['cambiar_password' => false]);
         $teacher = User::where('codigo_usuario', 'DOC-001')->firstOrFail();
         $guardian = User::where('codigo_usuario', 'ENC-0001')->firstOrFail();
         $group = $teacher->gruposAsignados()->wherePivot('tipo', 'titular')->firstOrFail();
@@ -54,6 +58,8 @@ class AvisoAvanceTest extends TestCase
     {
         Config::set('demo.enabled', true);
         $this->seed(DatabaseSeeder::class);
+        // Estos escenarios verifican permisos después del cambio inicial de contraseña.
+        User::query()->update(['cambiar_password' => false]);
         $teacher = User::where('codigo_usuario', 'DOC-001')->firstOrFail();
         $otherGroup = Grupo::where('docente_id', '!=', $teacher->id)->firstOrFail();
 
@@ -68,6 +74,8 @@ class AvisoAvanceTest extends TestCase
     {
         Config::set('demo.enabled', true);
         $this->seed(DatabaseSeeder::class);
+        // Estos escenarios verifican permisos después del cambio inicial de contraseña.
+        User::query()->update(['cambiar_password' => false]);
         $direction = User::where('codigo_usuario', 'DIR-001')->firstOrFail();
         $group = Grupo::where('activo', true)->firstOrFail();
 

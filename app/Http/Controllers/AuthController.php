@@ -76,6 +76,10 @@ class AuthController extends Controller
             'fecha' => now(),
         ]);
 
+        if ($user->cambiar_password) {
+            return redirect()->route('password.edit');
+        }
+
         return redirect()->intended(route('dashboard'));
     }
 

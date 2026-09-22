@@ -168,5 +168,7 @@ class ActivityTest extends TestCase
         Config::set('demo.enabled', true);
         Config::set('demo.user_password', Str::password(16));
         $this->seed(DatabaseSeeder::class);
+        // Estos escenarios verifican permisos después del cambio inicial de contraseña.
+        User::query()->update(['cambiar_password' => false]);
     }
 }

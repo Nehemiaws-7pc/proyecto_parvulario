@@ -10,7 +10,9 @@ use App\Http\Controllers\EstructuraEscolarController;
 use App\Http\Controllers\EstudianteController;
 use App\Http\Controllers\EvaluacionController;
 use App\Http\Controllers\JustificacionInasistenciaController;
+use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PersonaAutorizadaController;
+use App\Http\Middleware\RequirePasswordChange;
 use App\Models\Role;
 use Illuminate\Support\Facades\Route;
 
@@ -25,7 +27,12 @@ Route::middleware('guest')->group(function () {
     Route::post('/iniciar-sesion', [AuthController::class, 'store'])->name('login.store');
 });
 
-Route::middleware(['auth', 'active'])->group(function () {
+Route::middleware(['auth', 'active', RequirePasswordChange::class])->group(function () {
+    Route::get('/cambiar-contrasena', [PasswordController::class, 'edit'])->name('password.edit');
+    Route::put('/cambiar-contrasena', [PasswordController::class, 'update'])->name('password.update');
+    Route::get('estudiantes/{estudiante}/gestionar-encargados', [EncargadoController::class, 'index'])->name('encargados.index');
+    Route::post('estudiantes/{estudiante}/cuentas-encargados', [EncargadoController::class, 'createAccount'])->name('encargados.accounts.store');
+    Route::delete('estudiantes/{estudiante}/encargados/{encargado}', [EncargadoController::class, 'destroy'])->name('estudiantes.encargados.destroy');
     Route::get('/panel', fn () => view('dashboard'))->name('dashboard');
     Route::post('/cerrar-sesion', [AuthController::class, 'destroy'])->name('logout');
 
