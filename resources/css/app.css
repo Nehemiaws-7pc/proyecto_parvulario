@@ -16,6 +16,34 @@ body {
     background: var(--school-blue);
 }
 
+.navbar-school .container {
+    min-width: 0;
+}
+
+.navbar-school .navbar-collapse {
+    min-width: 0;
+}
+
+.navbar-school .navbar-nav {
+    align-items: center;
+    gap: .2rem;
+}
+
+.navbar-school .nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: .55rem .7rem;
+    border-radius: .5rem;
+    white-space: nowrap;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.navbar-school .nav-link:hover,
+.navbar-school .nav-link:focus-visible {
+    background: rgba(255, 255, 255, .12);
+}
+
 .brand-mark {
     display: inline-grid;
     width: 2.4rem;
@@ -81,4 +109,38 @@ body {
     width: 1rem;
     height: 1rem;
     margin-right: .25rem;
+}
+
+.password-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.25rem;
+    padding-inline: .8rem;
+}
+
+.password-toggle .eye-off,
+.password-toggle.is-visible .eye-open {
+    display: none;
+}
+
+.password-toggle.is-visible .eye-off {
+    display: inline-block;
+}
+
+@media (max-width: 991.98px) {
+    .navbar-school .navbar-nav {
+        align-items: stretch;
+        gap: .15rem;
+        padding: .6rem 0;
+    }
+
+    .navbar-school .nav-link {
+        width: 100%;
+        padding: .7rem .8rem;
+    }
+
+    .navbar-school .navbar-collapse {
+        overflow-x: hidden;
+    }
 }

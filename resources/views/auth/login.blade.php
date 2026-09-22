@@ -12,7 +12,7 @@
             <form method="POST" action="{{ route('login.store') }}" novalidate>
                 @csrf
                 <div class="mb-3"><label for="codigo_usuario" class="form-label">Código identificador</label><input id="codigo_usuario" name="codigo_usuario" type="text" maxlength="30" value="{{ old('codigo_usuario') }}" class="form-control form-control-lg text-uppercase @error('codigo_usuario') is-invalid @enderror" autocomplete="username" autofocus required>@error('codigo_usuario')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
-                <div class="mb-4"><label for="password" class="form-label">Contraseña</label><div class="input-group input-group-lg"><input id="password" name="password" type="password" class="form-control @error('password') is-invalid @enderror" autocomplete="current-password" required><button type="button" class="btn btn-outline-secondary" id="toggle-password" aria-controls="password" aria-pressed="false">Mostrar contraseña</button></div>@error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                <div class="mb-4"><label for="password" class="form-label">Contraseña</label><div class="input-group input-group-lg"><input id="password" name="password" type="password" class="form-control @error('password') is-invalid @enderror" autocomplete="current-password" required><button type="button" class="btn btn-outline-secondary password-toggle" id="toggle-password" aria-label="Mostrar contraseña" aria-controls="password" aria-pressed="false" title="Mostrar contraseña"><x-line-icon name="eye" class="eye-open" /><x-line-icon name="eye-off" class="eye-off" /><span class="visually-hidden" data-password-label>Mostrar contraseña</span></button></div>@error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                 <button type="submit" class="btn btn-school btn-lg w-100">Ingresar</button>
                 <div class="text-center mt-3"><a href="{{ route('password-recovery.create') }}">¿Olvidaste tu contraseña?</a></div>
             </form>
@@ -25,7 +25,10 @@ document.getElementById('toggle-password')?.addEventListener('click', function (
     const field = document.getElementById('password');
     const visible = field.type === 'text';
     field.type = visible ? 'password' : 'text';
-    this.textContent = visible ? 'Mostrar contraseña' : 'Ocultar contraseña';
+    this.classList.toggle('is-visible', !visible);
+    this.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    this.setAttribute('title', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    this.querySelector('[data-password-label]').textContent = visible ? 'Mostrar contraseña' : 'Ocultar contraseña';
     this.setAttribute('aria-pressed', String(!visible));
 });
 </script>
