@@ -10,7 +10,7 @@ class JustificacionInasistenciaPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE, Role::ENCARGADO]);
+        return (new AsistenciaPolicy)->viewAny($user);
     }
 
     public function view(User $user, JustificacionInasistencia $justificacion): bool
@@ -20,7 +20,7 @@ class JustificacionInasistenciaPolicy
         }
 
         if ($user->hasRole(Role::DOCENTE)) {
-            return $justificacion->asistencia->asignacion->grupo->tieneDocente($user);
+            return $this->viewAny($user) && $justificacion->asistencia->asignacion->grupo->tieneDocente($user);
         }
 
         return $user->hasRole(Role::ENCARGADO)

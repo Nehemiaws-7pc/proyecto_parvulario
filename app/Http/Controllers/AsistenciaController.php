@@ -49,6 +49,8 @@ class AsistenciaController extends Controller
             $assignments = $group->asignaciones()
                 ->where('estado', 'activa')
                 ->whereHas('estudiante', fn (Builder $query) => $query->where('estado', 'activo'))
+                ->when($request->user()->hasRole(Role::ENCARGADO), fn (Builder $query) => $query
+                    ->whereHas('estudiante.encargados', fn (Builder $guardian) => $guardian->where('usuario_id', $request->user()->id)))
                 ->with('estudiante')
                 ->get()
                 ->sortBy(fn ($assignment) => $assignment->estudiante->nombre_completo)

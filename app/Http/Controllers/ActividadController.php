@@ -36,6 +36,9 @@ class ActividadController extends Controller
         if ($group) {
             $activities = Actividad::query()
                 ->where('grupo_id', $group->id)
+                ->when($request->user()->hasRole(Role::DOCENTE), fn (Builder $query) => $query
+                    ->where(fn (Builder $type) => $type->where('tipo_docente', $this->teachingType($request->user(), $group))
+                        ->when($this->teachingType($request->user(), $group) === 'titular', fn (Builder $legacy) => $legacy->orWhereNull('tipo_docente'))))
                 ->when($request->user()->hasRole(Role::ENCARGADO), fn (Builder $query) => $query
                     ->where('publicada', true)
                     ->whereHas('calificaciones', fn (Builder $grades) => $grades
@@ -57,7 +60,7 @@ class ActividadController extends Controller
         $canCreate = $group
             && $request->user()->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE])
             && $group->activo
-            && $group->tieneDocente($request->user());
+            && ($request->user()->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO]) || $group->tieneDocente($request->user()));
 
         return view('activities.index', compact('activities', 'canCreate', 'group', 'groups', 'periods'));
     }
@@ -105,6 +108,9 @@ class ActividadController extends Controller
             ]);
         }
 
+        if ($this->teachingType($request->user(), $group) === 'educacion_fisica') {
+            $validated['area_aprendizaje'] = 'Educación Física';
+        }
         $activity = Actividad::create([
             ...$validated,
             'punteo_maximo' => $validated['punteo_maximo'] ?? 100,

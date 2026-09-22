@@ -87,6 +87,15 @@ class EstudianteController extends Controller
     {
         Gate::authorize('view', $estudiante);
 
+        if ($request->user()->hasRole(Role::DOCENTE) && $request->user()->gruposAsignados()
+            ->wherePivot('activo', true)->wherePivot('tipo', 'educacion_especial')->exists()) {
+            return view('students.basic', [
+                'nombre' => $estudiante->nombre_completo,
+                'codigo' => $estudiante->codigo,
+                'grupo' => $estudiante->asignacionActual?->grupo?->nombre_completo,
+            ]);
+        }
+
         $estudiante->load([
             'asignaciones.grupo.ciclo',
             'asignaciones.grupo.grado',

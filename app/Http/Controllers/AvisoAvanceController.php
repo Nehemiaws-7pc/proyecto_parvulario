@@ -19,7 +19,7 @@ class AvisoAvanceController extends Controller
         $avisos = AvisoAvance::query()->with(['autor', 'grupo', 'estudiante'])->where('activo', true)
             ->when($user->hasRole(Role::ENCARGADO), fn (Builder $q) => $q->where(function (Builder $scope) use ($user) {
                 $scope->whereHas('estudiante.encargados', fn ($e) => $e->where('usuario_id', $user->id))
-                    ->orWhereHas('grupo.asignaciones.estudiante.encargados', fn ($e) => $e->where('usuario_id', $user->id));
+                    ->orWhereHas('grupo.asignaciones', fn ($a) => $a->where('estado', 'activa')->whereHas('estudiante.encargados', fn ($e) => $e->where('usuario_id', $user->id)));
             }))
             ->when($user->hasRole(Role::DOCENTE), fn (Builder $q) => $q->where(function (Builder $scope) use ($user) {
                 $scope->whereHas('grupo', fn ($g) => $g->where('docente_id', $user->id)->orWhereHas('docentes', fn ($t) => $t->whereKey($user->id)->where('grupo_docente.activo', true)))
@@ -46,6 +46,7 @@ class AvisoAvanceController extends Controller
             'mensaje' => ['required', 'string', 'max:5000'],
         ]);
         abort_unless(($data['estudiante_id'] ?? null) || ($data['grupo_id'] ?? null), 422);
+        abort_if(! empty($data['grupo_id']) && ! empty($data['estudiante_id']), 422);
         $group = ($data['grupo_id'] ?? null) ? Grupo::findOrFail($data['grupo_id']) : null;
         if ($request->user()->hasRole(Role::DOCENTE)) {
             if ($group) {

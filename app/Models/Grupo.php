@@ -63,6 +63,19 @@ class Grupo extends Model
             || ($tipo === null && (int) $this->docente_id === (int) $docenteId);
     }
 
+    public function permiteAreaDocente(User $user, string $tipo): bool
+    {
+        if (! $this->activo) {
+            return false;
+        }
+        if ($this->asignacionesDocentes()->where('docente_id', $user->id)->exists()) {
+            return $this->asignacionesDocentes()->where('docente_id', $user->id)
+                ->where('activo', true)->where('tipo', $tipo)->exists();
+        }
+
+        return $tipo === 'titular' && (int) $this->docente_id === $user->id;
+    }
+
     public function asignaciones(): HasMany
     {
         return $this->hasMany(AsignacionEscolar::class, 'grupo_id');

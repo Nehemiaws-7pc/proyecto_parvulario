@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -42,6 +43,8 @@ class EvaluacionController extends Controller
             ? AreaAprendizaje::query()
                 ->whereHas('indicadores', fn (Builder $query) => $query->where('grado_id', $group->grado_id))
                 ->orderBy('nombre')->get()
+                ->filter(fn (AreaAprendizaje $area) => ! $request->user()->hasRole(Role::DOCENTE)
+                    || $group->permiteAreaDocente($request->user(), Str::slug($area->nombre) === 'educacion-fisica' ? 'educacion_fisica' : 'titular'))
             : collect();
         $area = $this->selected($areas, $validated['area_id'] ?? null, 'área');
         $indicators = $group && $area
@@ -68,7 +71,7 @@ class EvaluacionController extends Controller
                 ->sortBy(fn (Evaluacion $evaluation) => $evaluation->asignacion->estudiante->nombre_completo)
                 ->values();
 
-            if ($request->user()->hasRole(Role::DOCENTE)) {
+            if ($request->user()->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE])) {
                 $assignments = $group->asignaciones()
                     ->where('estado', 'activa')
                     ->whereHas('estudiante', fn (Builder $query) => $query->where('estado', 'activo'))
@@ -80,9 +83,9 @@ class EvaluacionController extends Controller
 
         $scales = EscalaEvaluacion::query()->where('activo', true)->orderBy('orden')->orderBy('nombre')->get();
         $canRegister = $group && $period && $indicator
-            && $request->user()->hasRole(Role::DOCENTE)
+            && $request->user()->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE])
             && $group->activo
-            && $group->tieneDocente($request->user())
+            && ($request->user()->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO]) || $group->tieneDocente($request->user()))
             && $period->activo
             && $indicator->activo
             && $area->activo
@@ -90,9 +93,9 @@ class EvaluacionController extends Controller
             && $evaluations->isEmpty()
             && $scales->isNotEmpty();
         $canPublish = $group && $period && $indicator
-            && $request->user()->hasRole(Role::DOCENTE)
+            && $request->user()->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE])
             && $group->activo
-            && $group->tieneDocente($request->user())
+            && ($request->user()->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO]) || $group->tieneDocente($request->user()))
             && $evaluations->isNotEmpty()
             && $evaluations->contains(fn (Evaluacion $evaluation) => ! $evaluation->publicado);
 
@@ -128,6 +131,7 @@ class EvaluacionController extends Controller
         $group = $this->teacherGroup($request->user(), (int) $validated['grupo_id']);
         $period = $this->groupPeriod($group, (int) $validated['periodo_id'], true);
         $indicator = $this->groupIndicator($group, (int) $validated['indicador_id'], true);
+        $this->authorizeArea($request->user(), $group, $indicator);
         $assignments = $group->asignaciones()
             ->where('estado', 'activa')
             ->whereHas('estudiante', fn (Builder $query) => $query->where('estado', 'activo'))
@@ -203,6 +207,7 @@ class EvaluacionController extends Controller
         $group = $this->teacherGroup($request->user(), (int) $validated['grupo_id']);
         $period = $this->groupPeriod($group, (int) $validated['periodo_id']);
         $indicator = $this->groupIndicator($group, (int) $validated['indicador_id']);
+        $this->authorizeArea($request->user(), $group, $indicator);
         $assignmentIds = $group->asignaciones()
             ->where('estado', 'activa')
             ->whereHas('estudiante', fn (Builder $query) => $query->where('estado', 'activo'))
@@ -332,6 +337,9 @@ class EvaluacionController extends Controller
 
     private function teacherGroup(User $user, int $groupId): Grupo
     {
+        if ($user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO])) {
+            return Grupo::where('activo', true)->findOrFail($groupId);
+        }
         $group = Grupo::query()->whereKey($groupId)->where('activo', true)
             ->where(function (Builder $group) use ($user) {
                 $group->where('docente_id', $user->id)
@@ -343,6 +351,12 @@ class EvaluacionController extends Controller
         abort_unless($group, 403);
 
         return $group;
+    }
+
+    private function authorizeArea(User $user, Grupo $group, IndicadorEvaluacion $indicator): void
+    {
+        abort_unless($user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO]) ||
+            $group->permiteAreaDocente($user, Str::slug($indicator->area->nombre) === 'educacion-fisica' ? 'educacion_fisica' : 'titular'), 403);
     }
 
     private function groupPeriod(Grupo $group, int $periodId, bool $active = false): Periodo

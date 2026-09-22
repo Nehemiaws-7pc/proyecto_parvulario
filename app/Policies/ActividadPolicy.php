@@ -21,9 +21,7 @@ class ActividadPolicy
         }
 
         if ($user->hasRole(Role::DOCENTE)) {
-            return $actividad->grupo->activo && $actividad->grupo->tieneDocente($user)
-                && ($actividad->tipo_docente === null || $actividad->tipo_docente === $user->asignacionesDocentes()
-                    ->where('grupo_id', $actividad->grupo_id)->where('activo', true)->value('tipo'));
+            return $this->viewAny($user) && $actividad->grupo->permiteAreaDocente($user, $actividad->tipo_docente ?? 'titular');
         }
 
         return $user->hasRole(Role::ENCARGADO)
@@ -40,15 +38,11 @@ class ActividadPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE]);
+        return $this->viewAny($user) && $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE]);
     }
 
     public function update(User $user, Actividad $actividad): bool
     {
-        return $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE])
-            && $actividad->grupo->activo
-            && ($user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO]) || ($actividad->grupo->tieneDocente($user)
-                && ($actividad->tipo_docente === null || $actividad->tipo_docente === $user->asignacionesDocentes()
-                    ->where('grupo_id', $actividad->grupo_id)->where('activo', true)->value('tipo'))));
+        return $this->create($user) && $this->view($user, $actividad) && $actividad->grupo->activo;
     }
 }

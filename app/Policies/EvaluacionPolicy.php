@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Evaluacion;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class EvaluacionPolicy
 {
@@ -21,8 +22,8 @@ class EvaluacionPolicy
         }
 
         if ($user->hasRole(Role::DOCENTE)) {
-            return $evaluacion->asignacion->grupo->activo
-                && $evaluacion->asignacion->grupo->tieneDocente($user);
+            return $this->viewAny($user) && $evaluacion->asignacion->grupo->permiteAreaDocente($user,
+                Str::slug($evaluacion->indicador->area->nombre) === 'educacion-fisica' ? 'educacion_fisica' : 'titular');
         }
 
         if ($user->hasRole(Role::ENCARGADO)) {
@@ -37,19 +38,19 @@ class EvaluacionPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE]);
+        return $this->viewAny($user) && $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE]);
     }
 
     public function update(User $user, Evaluacion $evaluacion): bool
     {
-        return $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE])
+        return $this->create($user) && $this->view($user, $evaluacion)
             && $evaluacion->asignacion->grupo->activo
             && ($user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO]) || $evaluacion->asignacion->grupo->tieneDocente($user));
     }
 
     public function publish(User $user): bool
     {
-        return $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE]);
+        return $this->viewAny($user) && $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE]);
     }
 
     public function configure(User $user): bool
