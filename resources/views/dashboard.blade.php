@@ -14,7 +14,9 @@
 @can('viewAny', \App\Models\JustificacionInasistencia::class)<div class="col-md-6 col-xl-4"><x-panel-card icon="J" title="Justificaciones" description="Consulta y gestión de justificaciones." route="justificaciones.index" /></div>@endcan
 @endif
 @can('viewAny', \App\Models\AvisoAvance::class)<div class="col-md-6 col-xl-4"><x-panel-card icon="N" title="Avisos de avances" description="Seguimiento y comunicación de avances." route="avisos.index" /></div>@endcan
-@if ($user->hasRole([\App\Models\Role::DIRECCION, \App\Models\Role::ADMINISTRATIVO]))<div class="col-md-6 col-xl-4"><x-panel-card icon="G" title="Estructura escolar" description="Ciclos, grados, secciones y grupos docentes." route="estructura.index" /></div>@endif
+@if ($user->hasRole([\App\Models\Role::DIRECCION, \App\Models\Role::ADMINISTRATIVO]))<div class="col-md-6 col-xl-4"><x-panel-card icon="G" title="Estructura escolar" description="Ciclos, grados, secciones y grupos docentes." route="estructura.index" /></div>
+@php($recoveryCount = \App\Models\PasswordRecoveryRequest::where('estado', \App\Models\PasswordRecoveryRequest::PENDING)->count())
+<div class="col-md-6 col-xl-4"><x-panel-card icon="R" title="Solicitudes de recuperación" description="{{ $recoveryCount }} solicitud(es) pendiente(s)." route="password-recovery.index" />@if ($recoveryCount === 0)<p class="small text-secondary mt-2 mb-0">No hay solicitudes pendientes.</p>@endif</div>@endif
 @if ($user->hasRole(\App\Models\Role::DOCENTE))<div class="col-12"><div class="card border-0 shadow-sm"><div class="card-body"><h2 class="h5">Grupos asignados</h2><p class="mb-0">{{ $user->gruposAsignados()->with(['grado','seccion'])->get()->map(fn($g) => $g->grado->nombre.' '.$g->seccion->nombre)->unique()->join(', ') }}</p></div></div></div>@endif
 </div></main>
 @endsection

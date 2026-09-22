@@ -67,6 +67,24 @@ class PasswordRecoveryTest extends TestCase
         $this->assertAuthenticatedAs($teacher->fresh());
     }
 
+    public function test_only_authorized_roles_see_the_recovery_link_and_empty_state(): void
+    {
+        $direction = $this->user(Role::DIRECCION, ['codigo_usuario' => 'DIR-NAV-001']);
+        $admin = $this->user(Role::ADMINISTRATIVO, ['codigo_usuario' => 'ADM-NAV-001']);
+        $teacher = $this->user(Role::DOCENTE, ['codigo_usuario' => 'DOC-NAV-001']);
+        $family = $this->user(Role::ENCARGADO, ['codigo_usuario' => 'ENC-NAV-001']);
+        foreach ([$direction, $admin] as $authorized) {
+            $dashboard = $this->actingAs($authorized)->get(route('dashboard'))->assertOk();
+            $dashboard->assertSee('Solicitudes de recuperación')->assertSee('No hay solicitudes pendientes.');
+            $dashboard->assertSee(route('password-recovery.index'));
+            $this->get(route('password-recovery.index'))->assertOk()->assertSee('No hay solicitudes pendientes.');
+        }
+        foreach ([$teacher, $family] as $restricted) {
+            $this->actingAs($restricted)->get(route('dashboard'))->assertOk()->assertDontSee('Solicitudes de recuperación');
+            $this->get(route('password-recovery.index'))->assertForbidden();
+        }
+    }
+
     public function test_recovery_requests_are_rate_limited_and_do_not_accept_other_roles(): void
     {
         $direction = $this->user(Role::DIRECCION, ['codigo_usuario' => 'DIR-REC-001']);

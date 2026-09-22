@@ -16,7 +16,9 @@
 @can('viewAny', \App\Models\JustificacionInasistencia::class)<a class="nav-link text-white" href="{{ route('justificaciones.index') }}"><x-line-icon name="justifications" class="nav-icon" /> Justificaciones</a>@endcan
 @endif
 @can('viewAny', \App\Models\AvisoAvance::class)<a class="nav-link text-white" href="{{ route('avisos.index') }}"><x-line-icon name="notices" class="nav-icon" /> Avisos</a>@endcan
-@if ($currentUser->hasRole([\App\Models\Role::DIRECCION, \App\Models\Role::ADMINISTRATIVO]))<a class="nav-link text-white" href="{{ route('estructura.index') }}"><x-line-icon name="school" class="nav-icon" /> Estructura</a>@endif
+@if ($currentUser->hasRole([\App\Models\Role::DIRECCION, \App\Models\Role::ADMINISTRATIVO]))<a class="nav-link text-white" href="{{ route('estructura.index') }}"><x-line-icon name="school" class="nav-icon" /> Estructura</a>
+@php($recoveryCount = \App\Models\PasswordRecoveryRequest::where('estado', \App\Models\PasswordRecoveryRequest::PENDING)->count())
+<a class="nav-link text-white" href="{{ route('password-recovery.index') }}"><x-line-icon name="notices" class="nav-icon" /> Solicitudes de recuperación <span class="badge bg-light text-primary">{{ $recoveryCount }}</span></a>@endif
 </div><div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 text-white ms-lg-4 py-3 py-lg-0"><div class="text-lg-end small"><div class="fw-semibold">{{ $currentUser->nombre }}</div><div class="opacity-75">{{ $currentUser->role->etiqueta }}</div></div><form method="POST" action="{{ route('logout') }}" data-confirm="Tu sesión se cerrará en este dispositivo." data-confirm-title="¿Cerrar sesión?">@csrf<button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button></form></div></div>
 </div></nav>
 @endauth
