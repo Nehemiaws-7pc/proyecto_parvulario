@@ -21,22 +21,22 @@
                 </button>
                 <div class="collapse navbar-collapse" id="mainNavigation">
                     <div class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-                        @can('viewAny', \App\Models\Estudiante::class)<a class="nav-link text-white" href="{{ route('estudiantes.index') }}">Estudiantes</a>@endcan
+                        @can('viewAny', \App\Models\Estudiante::class)<a class="nav-link text-white" href="{{ route('estudiantes.index') }}"><span aria-hidden="true">👥</span> Estudiantes</a>@endcan
                         @if (!$currentUser->hasRole(\App\Models\Role::DOCENTE) || !$currentUser->gruposAsignados()->wherePivot('tipo', 'educacion_especial')->wherePivot('activo', true)->exists())
-                            @can('viewAny', \App\Models\Asistencia::class)<a class="nav-link text-white" href="{{ route('asistencia.index') }}">Asistencia</a>@endcan
-                            @can('viewAny', \App\Models\Actividad::class)<a class="nav-link text-white" href="{{ route('actividades.index') }}">Actividades</a>@endcan
-                            @can('viewAny', \App\Models\Evaluacion::class)<a class="nav-link text-white" href="{{ route('evaluaciones.index') }}">Evaluaciones</a>@endcan
-                            @can('viewAny', \App\Models\JustificacionInasistencia::class)<a class="nav-link text-white" href="{{ route('justificaciones.index') }}">Justificaciones</a>@endcan
+                            @can('viewAny', \App\Models\Asistencia::class)<a class="nav-link text-white" href="{{ route('asistencia.index') }}"><span aria-hidden="true">🗓️</span> Asistencia</a>@endcan
+                            @can('viewAny', \App\Models\Actividad::class)<a class="nav-link text-white" href="{{ route('actividades.index') }}"><span aria-hidden="true">📝</span> Actividades</a>@endcan
+                            @can('viewAny', \App\Models\Evaluacion::class)<a class="nav-link text-white" href="{{ route('evaluaciones.index') }}"><span aria-hidden="true">📊</span> Evaluaciones</a>@endcan
+                            @can('viewAny', \App\Models\JustificacionInasistencia::class)<a class="nav-link text-white" href="{{ route('justificaciones.index') }}"><span aria-hidden="true">📄</span> Justificaciones</a>@endcan
                         @endif
-                        @can('viewAny', \App\Models\AvisoAvance::class)<a class="nav-link text-white" href="{{ route('avisos.index') }}">Avisos</a>@endcan
-                        @if ($currentUser->hasRole([\App\Models\Role::DIRECCION, \App\Models\Role::ADMINISTRATIVO]))<a class="nav-link text-white" href="{{ route('estructura.index') }}">Estructura</a>@endif
+                        @can('viewAny', \App\Models\AvisoAvance::class)<a class="nav-link text-white" href="{{ route('avisos.index') }}"><span aria-hidden="true">📣</span> Avisos</a>@endcan
+                        @if ($currentUser->hasRole([\App\Models\Role::DIRECCION, \App\Models\Role::ADMINISTRATIVO]))<a class="nav-link text-white" href="{{ route('estructura.index') }}"><span aria-hidden="true">🏫</span> Estructura</a>@endif
                     </div>
                     <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 text-white ms-lg-4 py-3 py-lg-0">
                         <div class="text-lg-end small">
                             <div class="fw-semibold">{{ auth()->user()->nombre }}</div>
                             <div class="opacity-75">{{ auth()->user()->role->etiqueta }}</div>
                         </div>
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST" action="{{ route('logout') }}" data-confirm="Tu sesión se cerrará en este dispositivo." data-confirm-title="¿Cerrar sesión?">
                             @csrf
                             <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
                         </form>
@@ -47,5 +47,8 @@
     @endauth
 
     @yield('content')
+    @if (session('status'))
+        <script>window.addEventListener('DOMContentLoaded', () => window.Swal?.fire({toast:true,position:'top-end',icon:'success',title:@json(session('status')),showConfirmButton:false,timer:3500}));</script>
+    @endif
 </body>
 </html>

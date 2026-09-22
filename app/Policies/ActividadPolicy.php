@@ -10,7 +10,8 @@ class ActividadPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::DOCENTE, Role::ENCARGADO]);
+        return $user->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO, Role::ENCARGADO])
+            || ($user->hasRole(Role::DOCENTE) && ! $user->gruposAsignados()->wherePivot('tipo', 'educacion_especial')->wherePivot('activo', true)->exists());
     }
 
     public function view(User $user, Actividad $actividad): bool
