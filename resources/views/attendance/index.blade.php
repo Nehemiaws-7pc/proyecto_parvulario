@@ -45,7 +45,9 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light"><tr><th>Estudiante</th><th>Estado</th><th>Observación</th><th>Registró</th><th></th></tr></thead>
                     <tbody>
-                        @foreach ($attendances as $attendance)
+                        @foreach ($attendances->groupBy(fn ($item) => $item->asignacion->grupo->seccion->nombre) as $sectionName => $sectionAttendances)
+                            <tr class="table-primary"><th colspan="5">Sección {{ $sectionName }}</th></tr>
+                            @foreach ($sectionAttendances as $attendance)
                             <tr>
                                 <td>{{ $attendance->asignacion->estudiante->nombre_completo }}</td>
                                 <td>{{ \App\Models\Asistencia::estados()[$attendance->estado] }}</td>
@@ -57,6 +59,7 @@
                                     @endcan
                                 </td>
                             </tr>
+                            @endforeach
                         @endforeach
                     </tbody>
                 </table>

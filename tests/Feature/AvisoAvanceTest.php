@@ -63,4 +63,21 @@ class AvisoAvanceTest extends TestCase
             'mensaje' => 'No debe publicarse.',
         ])->assertForbidden();
     }
+
+    public function test_direction_can_publish_and_consult_announcements_from_all_teachers(): void
+    {
+        Config::set('demo.enabled', true);
+        $this->seed(DatabaseSeeder::class);
+        $direction = User::where('codigo_usuario', 'DIR-001')->firstOrFail();
+        $group = Grupo::where('activo', true)->firstOrFail();
+
+        $this->actingAs($direction)->post(route('avisos.store'), [
+            'grupo_id' => $group->id,
+            'asunto' => 'Anuncio de Dirección',
+            'mensaje' => 'Información general para la familia.',
+        ])->assertRedirect();
+
+        $this->actingAs($direction)->get(route('avisos.index'))->assertOk()
+            ->assertSee('Anuncio de Dirección')->assertSee('Anuncio al grupo');
+    }
 }

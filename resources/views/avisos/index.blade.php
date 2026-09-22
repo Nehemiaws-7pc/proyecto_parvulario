@@ -3,7 +3,7 @@
 @section('content')
 <div class="container py-4">
     <h1 class="h3 mb-4">Avisos de avances</h1>
-    @if (auth()->user()->hasRole(\App\Models\Role::DOCENTE))
+    @if (auth()->user()->hasRole([\App\Models\Role::DIRECCION, \App\Models\Role::ADMINISTRATIVO, \App\Models\Role::DOCENTE]))
         <form method="POST" action="{{ route('avisos.store') }}" class="card mb-4"><div class="card-body row g-3">
             @csrf
             <div class="col-md-4"><label class="form-label" for="grupo_id">Grupo destinatario</label><select class="form-select" name="grupo_id" id="grupo_id" required><option value="">Selecciona</option>@foreach($groups as $group)<option value="{{ $group->id }}">{{ $group->nombre_completo }}</option>@endforeach</select></div>
