@@ -50,10 +50,19 @@ class GuardianManagementTest extends TestCase
         $this->get('/estudiantes/'.$student->id)->assertRedirect(route('password.edit'));
         $this->post('/avisos', [])->assertRedirect(route('password.edit'));
         $this->get(route('password.edit'))->assertOk();
-        $this->put(route('password.update'), ['current_password' => 'wrong', 'password' => 'New-Private-2026!', 'password_confirmation' => 'New-Private-2026!'])->assertSessionHasErrors('current_password');
+        $this->put(route('password.update'), ['current_password' => 'wrong', 'password' => 'New-Private-2026!', 'password_confirmation' => 'New-Private-2026!'])
+            ->assertSessionHasErrors('current_password')->assertSessionDoesntHaveErrors('password');
+        $this->put(route('password.update'), ['current_password' => $this->data()['password'], 'password' => 'short', 'password_confirmation' => 'short'])
+            ->assertSessionHasErrors(['password' => 'La nueva contraseña debe tener al menos 12 caracteres.']);
+        $this->put(route('password.update'), ['current_password' => $this->data()['password'], 'password' => 'New-Private-2026!', 'password_confirmation' => 'Different-Private-2026!'])
+            ->assertSessionHasErrors(['password' => 'La confirmación de la nueva contraseña no coincide.']);
         $this->put(route('password.update'), ['current_password' => $this->data()['password'], 'password' => 'New-Private-2026!', 'password_confirmation' => 'New-Private-2026!'])->assertSessionHasNoErrors()->assertRedirect('/panel');
         $this->assertFalse($user->fresh()->cambiar_password);
         $this->assertTrue(Hash::check('New-Private-2026!', $user->fresh()->password));
+        $this->post('/cerrar-sesion')->assertRedirect('/iniciar-sesion');
+        $this->post('/iniciar-sesion', ['codigo_usuario' => $user->codigo_usuario, 'password' => 'New-Private-2026!'])
+            ->assertRedirect('/panel');
+        $this->assertAuthenticatedAs($user->fresh());
         $this->get('/estudiantes/'.$student->id)->assertOk();
     }
 

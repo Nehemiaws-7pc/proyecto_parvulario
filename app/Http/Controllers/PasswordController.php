@@ -20,6 +20,10 @@ class PasswordController extends Controller
         $data = $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'string', 'min:12', 'max:72', 'confirmed', 'different:current_password'],
+        ], [
+            'current_password.current_password' => 'La contraseña actual no es correcta.',
+            'password.min' => 'La nueva contraseña debe tener al menos 12 caracteres.',
+            'password.confirmed' => 'La confirmación de la nueva contraseña no coincide.',
         ]);
         DB::transaction(function () use ($request, $data) {
             $request->user()->update(['password' => Hash::make($data['password']), 'cambiar_password' => false]);
