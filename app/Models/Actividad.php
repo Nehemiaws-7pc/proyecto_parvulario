@@ -25,6 +25,8 @@ class Actividad extends Model
         'descripcion',
         'area_aprendizaje',
         'fecha',
+        'hora_inicio',
+        'hora_fin',
         'punteo_maximo',
         'tipo',
         'tipo_docente',
@@ -37,6 +39,8 @@ class Actividad extends Model
     {
         return [
             'fecha' => 'date',
+            'hora_inicio' => 'datetime:H:i',
+            'hora_fin' => 'datetime:H:i',
             'publicada' => 'boolean',
             'publicada_at' => 'datetime',
             'punteo_maximo' => 'decimal:2',

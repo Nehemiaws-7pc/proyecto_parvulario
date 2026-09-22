@@ -49,6 +49,7 @@ class ActividadController extends Controller
                 ->with(['periodo', 'creadoPor'])
                 ->withCount('calificaciones')
                 ->orderByDesc('fecha')
+                ->orderByDesc('hora_inicio')
                 ->orderByDesc('id')
                 ->get();
         }
@@ -71,6 +72,8 @@ class ActividadController extends Controller
             'descripcion' => ['nullable', 'string', 'max:3000'],
             'area_aprendizaje' => ['nullable', 'string', 'max:120'],
             'fecha' => ['required', 'date_format:Y-m-d'],
+            'hora_inicio' => ['nullable', 'date_format:H:i'],
+            'hora_fin' => ['nullable', 'date_format:H:i', 'after:hora_inicio'],
             'tipo' => ['required', Rule::in(array_keys(Actividad::tipos()))],
             'punteo_maximo' => ['nullable', 'numeric', 'gt:0', 'max:9999.99'],
         ]);

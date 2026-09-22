@@ -92,8 +92,8 @@ class AsistenciaController extends Controller
             ->where(function (Builder $group) use ($request) {
                 $group->where('docente_id', $request->user()->id)
                     ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
-                        ->where('users.id', $request->user()->id)
-                        ->wherePivot('activo', true)
+                        ->whereKey($request->user()->id)
+                        ->where('grupo_docente.activo', true)
                         ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
             })
             ->first();
@@ -249,8 +249,8 @@ class AsistenciaController extends Controller
                 ->where(function (Builder $group) use ($user) {
                     $group->where('docente_id', $user->id)
                         ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
-                            ->where('users.id', $user->id)
-                            ->wherePivot('activo', true)
+                            ->whereKey($user->id)
+                            ->where('grupo_docente.activo', true)
                             ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
                 }))
             ->when($user->hasRole(Role::ENCARGADO), fn (Builder $query) => $query

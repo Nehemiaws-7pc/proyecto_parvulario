@@ -132,6 +132,26 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_demo_guardian_account_can_login_with_the_controlled_reset_password(): void
+    {
+        Config::set('demo.enabled', true);
+        Config::set('demo.user_password', 'Demo2026!');
+        Config::set('demo.reset_passwords', true);
+        $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
+
+        $user = User::where('codigo_usuario', 'ENC-0001')->firstOrFail();
+        $this->assertTrue(Hash::check('Demo2026!', $user->password));
+        $this->assertTrue($user->activo);
+        $this->assertTrue($user->role->activo);
+
+        $this->post(route('login.store'), [
+            'codigo_usuario' => 'ENC-0001',
+            'password' => 'Demo2026!',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_invalid_password_is_rejected(): void
     {
         $user = User::factory()->create([

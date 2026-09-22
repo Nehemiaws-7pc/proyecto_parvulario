@@ -142,6 +142,27 @@ class ActivityTest extends TestCase
         ])->assertSessionHasErrors('resultados');
     }
 
+    public function test_same_group_and_date_supports_activities_at_different_times(): void
+    {
+        $this->seedDemoData();
+        $teacher = User::where('codigo_usuario', 'DOC-001')->firstOrFail();
+        $group = Grupo::where('docente_id', $teacher->id)->firstOrFail();
+        $period = Periodo::where('ciclo_id', $group->ciclo_id)->where('activo', true)->firstOrFail();
+        foreach ([['Primera hora', '08:00'], ['Segunda hora', '10:30']] as [$title, $time]) {
+            $this->actingAs($teacher)->post(route('actividades.store'), [
+                'grupo_id' => $group->id, 'periodo_id' => $period->id, 'titulo' => $title,
+                'descripcion' => 'Actividad horaria ficticia.', 'area_aprendizaje' => 'Comunicación y Lenguaje',
+                'fecha' => $period->fecha_inicio->toDateString(), 'hora_inicio' => $time,
+                'tipo' => Actividad::NUMERICA, 'punteo_maximo' => 10,
+            ])->assertRedirect();
+        }
+        $first = Actividad::where('grupo_id', $group->id)->where('titulo', 'Primera hora')->firstOrFail();
+        $second = Actividad::where('grupo_id', $group->id)->where('titulo', 'Segunda hora')->firstOrFail();
+        $this->assertSame('08:00', $first->hora_inicio->format('H:i'));
+        $this->assertSame('10:30', $second->hora_inicio->format('H:i'));
+        $this->assertSame($first->fecha->toDateString(), $second->fecha->toDateString());
+    }
+
     private function seedDemoData(): void
     {
         Config::set('demo.enabled', true);

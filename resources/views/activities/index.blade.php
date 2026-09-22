@@ -45,7 +45,7 @@
                                 <tr>
                                     <td><strong>{{ $activity->titulo }}</strong><div class="small text-secondary">{{ $activity->calificaciones_count }} resultados</div></td>
                                     <td>{{ $activity->periodo->nombre }}</td>
-                                    <td>{{ $activity->fecha->format('d/m/Y') }}</td>
+                                    <td>{{ $activity->fecha->format('d/m/Y') }}<div class="small text-secondary">{{ $activity->hora_inicio?->format('H:i') }}{{ $activity->hora_fin ? ' - '.$activity->hora_fin->format('H:i') : '' }}</div></td>
                                     <td>{{ \App\Models\Actividad::tipos()[$activity->tipo] }}</td>
                                     <td><span class="badge {{ $activity->publicada ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $activity->publicada ? 'Publicada' : 'Borrador' }}</span></td>
                                     <td class="text-end"><a href="{{ route('actividades.show', $activity) }}" class="btn btn-sm btn-outline-primary">Ver resumen</a></td>
@@ -67,6 +67,8 @@
                         <div class="col-md-6"><label class="form-label" for="titulo">Título</label><input id="titulo" name="titulo" value="{{ old('titulo') }}" class="form-control" maxlength="150" required></div>
                         <div class="col-md-3"><label class="form-label" for="periodo_id">Período</label><select id="periodo_id" name="periodo_id" class="form-select" required>@foreach ($periods as $period)<option value="{{ $period->id }}">{{ $period->nombre }}</option>@endforeach</select></div>
                         <div class="col-md-3"><label class="form-label" for="fecha">Fecha</label><input id="fecha" type="date" name="fecha" value="{{ old('fecha', today()->toDateString()) }}" class="form-control" required></div>
+                        <div class="col-md-2"><label class="form-label" for="hora_inicio">Hora inicio</label><input id="hora_inicio" type="time" name="hora_inicio" value="{{ old('hora_inicio') }}" class="form-control"></div>
+                        <div class="col-md-2"><label class="form-label" for="hora_fin">Hora fin</label><input id="hora_fin" type="time" name="hora_fin" value="{{ old('hora_fin') }}" class="form-control"></div>
                         <div class="col-md-4"><label class="form-label" for="tipo">Evaluación</label><select id="tipo" name="tipo" class="form-select" required>@foreach (\App\Models\Actividad::tipos() as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach</select></div>
                         <div class="col-md-8"><label class="form-label" for="descripcion">Descripción</label><textarea id="descripcion" name="descripcion" class="form-control" rows="2" maxlength="3000">{{ old('descripcion') }}</textarea></div>
                     </div>

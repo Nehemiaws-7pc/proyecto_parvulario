@@ -309,7 +309,7 @@ class EvaluacionController extends Controller
                     $group->where('docente_id', $user->id)
                         ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
                             ->whereKey($user->id)
-                            ->wherePivot('activo', true)
+                            ->where('grupo_docente.activo', true)
                             ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
                 }))
             ->when($user->hasRole(Role::ENCARGADO), fn (Builder $query) => $query
@@ -337,7 +337,7 @@ class EvaluacionController extends Controller
                 $group->where('docente_id', $user->id)
                     ->orWhereHas('docentes', fn (Builder $teacher) => $teacher
                         ->whereKey($user->id)
-                        ->wherePivot('activo', true)
+                        ->where('grupo_docente.activo', true)
                         ->whereIn('grupo_docente.tipo', ['titular', 'educacion_fisica']));
             })->first();
         abort_unless($group, 403);

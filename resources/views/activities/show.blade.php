@@ -13,7 +13,7 @@
             <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
                 <div>
                     <h1 class="h3 fw-bold mb-1">{{ $actividad->titulo }}</h1>
-                    <p class="text-secondary mb-2">{{ $actividad->grupo->nombre_completo }} · {{ $actividad->periodo->nombre }} · {{ $actividad->fecha->format('d/m/Y') }}</p>
+                    <p class="text-secondary mb-2">{{ $actividad->grupo->nombre_completo }} · {{ $actividad->periodo->nombre }} · {{ $actividad->fecha->format('d/m/Y') }} · {{ $actividad->hora_inicio?->format('H:i') }}{{ $actividad->hora_fin ? ' - '.$actividad->hora_fin->format('H:i') : '' }}</p>
                     <p class="mb-0">{{ $actividad->descripcion ?: 'Sin descripción.' }}</p>
                 </div>
                 <div><span class="badge {{ $actividad->publicada ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $actividad->publicada ? 'Publicada' : 'Borrador' }}</span></div>
