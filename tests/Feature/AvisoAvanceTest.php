@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Grupo;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,5 +29,38 @@ class AvisoAvanceTest extends TestCase
 
         $this->actingAs($guardian)->get(route('avisos.index'))->assertOk()->assertSee('Aviso de prueba');
         $this->assertDatabaseHas('avisos_avance', ['asunto' => 'Aviso de prueba', 'autor_id' => $special->id]);
+    }
+
+    public function test_teacher_publishes_group_announcement_and_guardian_sees_only_linked_groups(): void
+    {
+        Config::set('demo.enabled', true);
+        $this->seed(DatabaseSeeder::class);
+        $teacher = User::where('codigo_usuario', 'DOC-001')->firstOrFail();
+        $guardian = User::where('codigo_usuario', 'ENC-0001')->firstOrFail();
+        $group = $teacher->gruposAsignados()->wherePivot('tipo', 'titular')->firstOrFail();
+
+        $this->actingAs($teacher)->post(route('avisos.store'), [
+            'grupo_id' => $group->id,
+            'asunto' => 'Anuncio para familias',
+            'mensaje' => 'Reunión ficticia del grupo.',
+        ])->assertRedirect();
+
+        $this->actingAs($guardian)->get(route('avisos.index'))->assertOk()
+            ->assertSee('Anuncio para familias')->assertSee('Anuncio al grupo');
+        $this->assertTrue($guardian->encargado->estudiantes()->whereHas('asignaciones', fn ($q) => $q->where('grupo_id', $group->id))->exists());
+    }
+
+    public function test_teacher_cannot_publish_to_an_unassigned_group(): void
+    {
+        Config::set('demo.enabled', true);
+        $this->seed(DatabaseSeeder::class);
+        $teacher = User::where('codigo_usuario', 'DOC-001')->firstOrFail();
+        $otherGroup = Grupo::where('docente_id', '!=', $teacher->id)->firstOrFail();
+
+        $this->actingAs($teacher)->post(route('avisos.store'), [
+            'grupo_id' => $otherGroup->id,
+            'asunto' => 'No autorizado',
+            'mensaje' => 'No debe publicarse.',
+        ])->assertForbidden();
     }
 }

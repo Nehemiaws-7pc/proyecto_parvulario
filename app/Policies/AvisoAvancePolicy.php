@@ -19,8 +19,10 @@ class AvisoAvancePolicy
             return true;
         }
         if ($user->hasRole(Role::ENCARGADO)) {
-            return $aviso->activo && $aviso->estudiante_id !== null
-                && $aviso->estudiante?->encargados()->where('usuario_id', $user->id)->exists();
+            return $aviso->activo && (($aviso->estudiante_id !== null
+                && $aviso->estudiante?->encargados()->where('usuario_id', $user->id)->exists())
+                || ($aviso->grupo_id !== null && $aviso->grupo?->asignaciones()->where('estado', 'activa')
+                    ->whereHas('estudiante.encargados', fn ($q) => $q->where('usuario_id', $user->id))->exists()));
         }
         if ($user->hasRole(Role::DOCENTE)) {
             return $aviso->activo && (($aviso->grupo && $aviso->grupo->tieneDocente($user))
