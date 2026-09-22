@@ -9,6 +9,7 @@
 </head>
 <body>
     @auth
+        @php($currentUser = auth()->user())
         <nav class="navbar navbar-expand-lg navbar-dark navbar-school">
             <div class="container py-1">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('dashboard') }}">
@@ -20,11 +21,15 @@
                 </button>
                 <div class="collapse navbar-collapse" id="mainNavigation">
                     <div class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-                        <a class="nav-link text-white" href="{{ route('estudiantes.index') }}">Estudiantes</a>
-                        <a class="nav-link text-white" href="{{ route('asistencia.index') }}">Asistencia</a>
-                        <a class="nav-link text-white" href="{{ route('justificaciones.index') }}">Justificaciones</a>
-                        <a class="nav-link text-white" href="{{ route('actividades.index') }}">Actividades</a>
-                        <a class="nav-link text-white" href="{{ route('evaluaciones.index') }}">Evaluaciones</a>
+                        @can('viewAny', \App\Models\Estudiante::class)<a class="nav-link text-white" href="{{ route('estudiantes.index') }}">Estudiantes</a>@endcan
+                        @if (!$currentUser->hasRole(\App\Models\Role::DOCENTE) || !$currentUser->gruposAsignados()->wherePivot('tipo', 'educacion_especial')->wherePivot('activo', true)->exists())
+                            @can('viewAny', \App\Models\Asistencia::class)<a class="nav-link text-white" href="{{ route('asistencia.index') }}">Asistencia</a>@endcan
+                            @can('viewAny', \App\Models\Actividad::class)<a class="nav-link text-white" href="{{ route('actividades.index') }}">Actividades</a>@endcan
+                            @can('viewAny', \App\Models\Evaluacion::class)<a class="nav-link text-white" href="{{ route('evaluaciones.index') }}">Evaluaciones</a>@endcan
+                            @can('viewAny', \App\Models\JustificacionInasistencia::class)<a class="nav-link text-white" href="{{ route('justificaciones.index') }}">Justificaciones</a>@endcan
+                        @endif
+                        @can('viewAny', \App\Models\AvisoAvance::class)<a class="nav-link text-white" href="{{ route('avisos.index') }}">Avisos</a>@endcan
+                        @if ($currentUser->hasRole([\App\Models\Role::DIRECCION, \App\Models\Role::ADMINISTRATIVO]))<a class="nav-link text-white" href="{{ route('estructura.index') }}">Estructura</a>@endif
                     </div>
                     <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 text-white ms-lg-4 py-3 py-lg-0">
                         <div class="text-lg-end small">
