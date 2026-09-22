@@ -13,6 +13,7 @@ use App\Http\Controllers\JustificacionInasistenciaController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PasswordRecoveryController;
 use App\Http\Controllers\PersonaAutorizadaController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Middleware\RequirePasswordChange;
 use App\Models\Role;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', 'active', RequirePasswordChange::class])->group(function () {
     Route::get('/cambiar-contrasena', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('/cambiar-contrasena', [PasswordController::class, 'update'])->name('password.update');
+    Route::get('/mi-perfil', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/mi-perfil', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('estudiantes/{estudiante}/gestionar-encargados', [EncargadoController::class, 'index'])->name('encargados.index');
     Route::post('estudiantes/{estudiante}/cuentas-encargados', [EncargadoController::class, 'createAccount'])->name('encargados.accounts.store');
     Route::delete('estudiantes/{estudiante}/encargados/{encargado}', [EncargadoController::class, 'destroy'])->name('estudiantes.encargados.destroy');

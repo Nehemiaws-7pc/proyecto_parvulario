@@ -36,18 +36,21 @@ class EncargadoController extends Controller
     public function createAccount(Request $request, Estudiante $estudiante): RedirectResponse
     {
         Gate::authorize('update', $estudiante);
+        $suffix = $request->input('codigo_sufijo');
         $request->merge([
-            'codigo_usuario' => Str::upper(trim((string) $request->input('codigo_usuario'))),
+            'codigo_usuario' => $suffix !== null
+                ? ((string) $request->input('codigo_prefijo') === 'ENC-' ? 'ENC-'.Str::upper(trim((string) $suffix)) : 'INVALID-'.Str::upper(trim((string) $suffix)))
+                : Str::upper(trim((string) $request->input('codigo_usuario'))),
             'correo' => $request->filled('correo') ? Str::lower(trim($request->input('correo'))) : null,
         ]);
         $data = $request->validate([
-            'codigo_usuario' => ['required', 'string', 'max:30', 'regex:/^[A-Z0-9-]+$/', 'unique:users,codigo_usuario'],
+            'codigo_usuario' => ['required', 'string', 'max:30', 'regex:/^ENC-[A-Z0-9-]+$/', 'unique:users,codigo_usuario'],
             'nombre' => ['required', 'string', 'max:150'],
             'telefono' => ['required', 'string', 'max:20'],
             'correo' => ['nullable', 'email', 'max:150', 'unique:users,correo'],
             'password' => ['required', 'string', 'min:12', 'max:72', 'confirmed'],
             'parentesco' => ['required', 'string', 'max:50'],
-        ]);
+        ], ['codigo_usuario.regex' => 'El código debe conservar el prefijo ENC-.']);
         DB::transaction(function () use ($request, $estudiante, $data) {
             // Serializa las altas de encargados para evitar duplicados concurrentes.
             $role = Role::where('nombre', Role::ENCARGADO)->where('activo', true)->lockForUpdate()->firstOrFail();
@@ -69,7 +72,8 @@ class EncargadoController extends Controller
             $this->audit($request, $estudiante, 'crear_cuenta_encargado', $guardian);
         });
 
-        return back()->with('status', 'Cuenta creada y vinculada. Entrega la contraseña inicial por un medio privado; deberá cambiarla al acceder.');
+        return back()->with('status', 'Cuenta creada y vinculada. Entrega la contraseña inicial por un medio privado; deberá cambiarla al acceder.')
+            ->with('created_code', $data['codigo_usuario']);
     }
 
     public function destroy(Request $request, Estudiante $estudiante, Encargado $encargado): RedirectResponse

@@ -8,6 +8,17 @@ use Illuminate\Validation\Rule;
 
 class EstudianteRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('codigo_sufijo')) {
+            $prefix = (string) $this->input('codigo_prefijo');
+            $suffix = strtoupper(trim((string) $this->input('codigo_sufijo')));
+            $this->merge(['codigo' => ($prefix === 'EST-' ? 'EST-' : 'INVALID-').$suffix]);
+        } elseif ($this->has('codigo')) {
+            $this->merge(['codigo' => strtoupper(trim((string) $this->input('codigo')))]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user()?->hasRole([Role::DIRECCION, Role::ADMINISTRATIVO]) ?? false;
@@ -18,7 +29,7 @@ class EstudianteRequest extends FormRequest
         $estudianteId = $this->route('estudiante')?->id;
 
         return [
-            'codigo' => ['required', 'string', 'max:30', Rule::unique('estudiantes', 'codigo')->ignore($estudianteId)],
+            'codigo' => ['required', 'string', 'max:30', 'regex:/^EST-[A-Z0-9-]+$/', Rule::unique('estudiantes', 'codigo')->ignore($estudianteId)],
             'nombres' => ['required', 'string', 'max:100'],
             'apellidos' => ['required', 'string', 'max:100'],
             'fecha_nacimiento' => ['required', 'date', 'before_or_equal:today'],
@@ -36,6 +47,7 @@ class EstudianteRequest extends FormRequest
         return [
             'codigo.required' => 'El código del estudiante es obligatorio.',
             'codigo.unique' => 'Este código ya está en uso.',
+            'codigo.regex' => 'El código debe conservar el prefijo EST-.',
             'nombres.required' => 'Los nombres son obligatorios.',
             'apellidos.required' => 'Los apellidos son obligatorios.',
             'fecha_nacimiento.required' => 'La fecha de nacimiento es obligatoria.',

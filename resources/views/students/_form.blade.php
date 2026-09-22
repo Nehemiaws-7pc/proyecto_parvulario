@@ -1,8 +1,10 @@
 @php($student = $estudiante ?? null)
 <div class="row g-3">
     <div class="col-md-4">
-        <label class="form-label" for="codigo">Código</label>
-        <input id="codigo" name="codigo" value="{{ old('codigo', $student?->codigo) }}" maxlength="30" class="form-control text-uppercase @error('codigo') is-invalid @enderror" required>
+        <label class="form-label" for="codigo_sufijo">Código</label>
+        @php($studentSuffix = $student && str_starts_with($student->codigo, 'EST-') ? substr($student->codigo, 4) : '')
+        <div class="input-group"><span class="input-group-text fw-semibold">EST-</span><input id="codigo_sufijo" name="codigo_sufijo" value="{{ old('codigo_sufijo', $studentSuffix) }}" maxlength="26" pattern="[A-Za-z0-9-]+" class="form-control text-uppercase @error('codigo') is-invalid @enderror" required></div>
+        <input type="hidden" name="codigo_prefijo" value="EST-">
         @error('codigo')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-4">

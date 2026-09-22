@@ -5,6 +5,7 @@
     <a href="{{ route('estudiantes.show', $estudiante) }}">Volver al expediente</a>
     <h1 class="h3 mt-3">Encargados de {{ $estudiante->nombre_completo }}</h1>
     @if(session('status'))<div class="alert alert-success">{{ session('status') }}</div>@endif
+    @if(session('created_code'))<div class="alert alert-info"><strong>Código de inicio de sesión:</strong> {{ session('created_code') }}. Entrégalo junto con la contraseña temporal por un medio privado.</div>@endif
     @if($errors->any())<div class="alert alert-danger">Revisa los campos indicados.</div>@endif
     <h2 class="h5 mt-4">Vínculos actuales</h2>
     @foreach($estudiante->encargados as $guardian)
@@ -51,10 +52,15 @@
     <p>Busca primero para evitar duplicados. Una persona puede tener varios estudiantes; no necesita una cuenta por estudiante.</p>
     <form method="POST" action="{{ route('encargados.accounts.store', $estudiante) }}" class="row g-3">
         @csrf
-        @foreach(['codigo_usuario' => 'Código único', 'nombre' => 'Nombre completo', 'telefono' => 'Teléfono', 'correo' => 'Correo (opcional)', 'parentesco' => 'Parentesco', 'password' => 'Contraseña inicial (mínimo 12 caracteres)', 'password_confirmation' => 'Confirmar contraseña inicial'] as $field => $label)
+        <input type="hidden" name="codigo_prefijo" value="ENC-">
+        @foreach(['codigo_sufijo' => 'Código numérico', 'nombre' => 'Nombre completo', 'telefono' => 'Teléfono', 'correo' => 'Correo (opcional)', 'parentesco' => 'Parentesco', 'password' => 'Contraseña inicial (mínimo 12 caracteres)', 'password_confirmation' => 'Confirmar contraseña inicial'] as $field => $label)
             <div class="col-md-6">
                 <label for="new-{{ $field }}" class="form-label">{{ $label }}</label>
-                <input id="new-{{ $field }}" name="{{ $field }}" type="{{ str_starts_with($field, 'password') ? 'password' : ($field === 'correo' ? 'email' : 'text') }}" value="{{ str_starts_with($field, 'password') ? '' : old($field) }}" autocomplete="{{ str_starts_with($field, 'password') ? 'new-password' : 'off' }}" class="form-control" @required($field !== 'correo')>
+                @if ($field === 'codigo_sufijo')
+                    <div class="input-group"><span class="input-group-text fw-semibold">ENC-</span><input id="new-{{ $field }}" name="{{ $field }}" type="text" value="{{ old($field) }}" pattern="[0-9]+" inputmode="numeric" autocomplete="off" class="form-control" required></div>
+                @else
+                    <input id="new-{{ $field }}" name="{{ $field }}" type="{{ str_starts_with($field, 'password') ? 'password' : ($field === 'correo' ? 'email' : 'text') }}" value="{{ str_starts_with($field, 'password') ? '' : old($field) }}" autocomplete="{{ str_starts_with($field, 'password') ? 'new-password' : 'off' }}" class="form-control" @required($field !== 'correo')>
+                @endif
                 @error($field)<div class="text-danger">{{ $message }}</div>@enderror
             </div>
         @endforeach

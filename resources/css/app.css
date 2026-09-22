@@ -39,6 +39,21 @@ body {
     transition: background-color .15s ease, color .15s ease;
 }
 
+.navbar-school .profile-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.navbar-school .profile-nav-link:hover,
+.navbar-school .profile-nav-link:focus-visible {
+    color: #fff;
+    text-decoration: underline;
+}
+
 .navbar-school .nav-link:hover,
 .navbar-school .nav-link:focus-visible {
     background: rgba(255, 255, 255, .12);

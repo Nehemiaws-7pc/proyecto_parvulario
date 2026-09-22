@@ -39,6 +39,21 @@ class StudentManagementTest extends TestCase
         ]);
     }
 
+    public function test_student_creation_uses_fixed_est_prefix_and_rejects_manipulated_prefix(): void
+    {
+        $administrative = $this->userWithRole(Role::ADMINISTRATIVO);
+        $group = $this->group();
+        $payload = $this->studentData($group, ['codigo' => null, 'codigo_prefijo' => 'EST-', 'codigo_sufijo' => '0099']);
+        unset($payload['codigo']);
+        $this->actingAs($administrative)->post(route('estudiantes.store'), $payload)->assertRedirect();
+        $this->assertDatabaseHas('estudiantes', ['codigo' => 'EST-0099']);
+        $duplicate = $this->studentData($group, ['codigo' => 'EST-0099']);
+        $this->actingAs($administrative)->post(route('estudiantes.store'), $duplicate)->assertSessionHasErrors('codigo');
+        $payload['codigo_prefijo'] = 'DOC-';
+        $payload['codigo_sufijo'] = '0100';
+        $this->actingAs($administrative)->post(route('estudiantes.store'), $payload)->assertSessionHasErrors('codigo');
+    }
+
     public function test_student_form_validates_unique_code_birth_date_and_group(): void
     {
         $administrative = $this->userWithRole(Role::ADMINISTRATIVO);

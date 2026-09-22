@@ -36,7 +36,7 @@ class GuardianManagementTest extends TestCase
         $this->user(Role::ENCARGADO);
         $student = Estudiante::factory()->create();
         $this->actingAs($admin)->get(route('encargados.index', $student))->assertOk()->assertSee('Crear cuenta si no existe');
-        $this->post(route('encargados.accounts.store', $student), $this->data())->assertSessionHasNoErrors()->assertRedirect();
+        $this->post(route('encargados.accounts.store', $student), $this->data())->assertSessionHasNoErrors()->assertRedirect()->assertSessionHas('created_code', 'ENC-TEST-100');
         $user = User::where('codigo_usuario', 'ENC-TEST-100')->firstOrFail();
         $this->assertTrue(Hash::check($this->data()['password'], $user->password));
         $this->assertTrue($user->cambiar_password);
