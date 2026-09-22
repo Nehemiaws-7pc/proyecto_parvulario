@@ -18,7 +18,7 @@ class AuthenticationTest extends TestCase
 
     public function test_login_screen_is_available(): void
     {
-        $this->get(route('login'))->assertOk();
+        $this->get(route('login'))->assertOk()->assertSee('¿Olvidaste tu contraseña?')->assertSee(route('password-recovery.create'));
     }
 
     public function test_login_screen_loads_the_configured_vite_entries_over_https(): void
